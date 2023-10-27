@@ -99,6 +99,7 @@ class HDFSClient:
             data=file_path.read_text(),
         )
         response.raise_for_status()
+        return response
 
     def get(self, hdfs_file_name: str, file: str):
         file_path = pathlib.Path(file)
@@ -109,6 +110,7 @@ class HDFSClient:
         )
         response = requests.get(response.url)
         file_path.write_bytes(response.content)
+        return response
 
     def add(self, file, hdfs_file_name):
         file_path = self.validate_file_path(file)
@@ -120,6 +122,7 @@ class HDFSClient:
         )
         response = requests.post(url=response.url, data=home_file_path.read_text())
         response.raise_for_status()
+        return response
 
     def delete(self, file_name: str):
         response = self._make_request(
@@ -127,6 +130,7 @@ class HDFSClient:
             path=file_name,
             params={"user.name": self.user, "op": "DELETE"},
         )
+        return response
 
     def ls(self):
         response = self._make_request(
