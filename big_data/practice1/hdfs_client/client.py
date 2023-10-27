@@ -1,11 +1,9 @@
-import json
 import os
 import pathlib
-from os import PathLike
 
 import requests
 from loguru import logger
-from requests import Response
+from requests import Response, HTTPError
 
 
 class HDFSClient:
@@ -18,9 +16,10 @@ class HDFSClient:
         self.base_url = f"http://{host}:{port}/webhdfs/v1/user/{self.user}"
 
     def _build_url(self, path=None, params=None):
-        url = f"{self.base_url}{self.current_hdfs_path}{path}"
+        url = f"{self.base_url}{self.current_hdfs_path}{path or ''}"
         if params:
             url += "?" + "&".join(f"{key}={value}" for key, value in params.items())
+        logger.debug(f"url '{url}'")
         return url
 
     def _make_request(
@@ -35,11 +34,13 @@ class HDFSClient:
                 data=data,
             ) as resp:
                 resp.raise_for_status()
-                if resp.status_code == 200:
-                    return resp
+                return resp
         except requests.exceptions.ConnectionError as ce:
             logger.error(ce)
             raise SystemExit
+        except HTTPError as he:
+            logger.error(he)
+            return None
 
     @staticmethod
     def _build_path(old_path, new_path):
@@ -60,7 +61,8 @@ class HDFSClient:
         return pathlib.Path(old_path)
 
     @staticmethod
-    def validate_file_path(file: pathlib.Path | PathLike | str):
+    def validate_file_path(file: str):
+        logger.debug(f"file '{file}'")
         file_path = pathlib.Path(file)
         if file_path.is_dir():
             logger.error(f"{file_path} is a directory")
@@ -74,30 +76,32 @@ class HDFSClient:
         response = self._make_request(
             "PUT",
             path=dir,
-            params={"user.name": self.user, "op": "MKDIRS"},
+            params={
+                "user.name": self.user,
+                "op": "MKDIRS",
+            },
         )
         return response
 
-    def put(self, file: pathlib.Path | PathLike | str, hdfs_file_name: str):
+    def put(self, file: str, hdfs_file_name: str):
         file_path = self.validate_file_path(file)
         response = self._make_request(
             "PUT",
             path=hdfs_file_name,
-            params={"user.name": self.user, "op": "MKDIRS"},
-        )
-        response = self._make_request(
-            "PUT",
-            path=hdfs_file_name,
-            params={"user.name": self.user, "op": "MKDIRS"},
+            params={
+                "user.name": self.user,
+                "op": "CREATE",
+                "overwrite": "true",
+            },
         )
         response = requests.put(
             url=response.url,
-            data=file_path.read_text(encoding="utf-8"),
+            data=file_path.read_text(),
         )
         response.raise_for_status()
 
-    def get(self, hdfs_file_name: str, file: pathlib.Path | PathLike | str):
-        file_path = self.validate_file_path(file)
+    def get(self, hdfs_file_name: str, file: str):
+        file_path = pathlib.Path(file)
         response = self._make_request(
             "GET",
             path=hdfs_file_name,
@@ -128,7 +132,7 @@ class HDFSClient:
             "GET",
             params={"user.name": self.user, "op": "LISTSTATUS"},
         )
-        data = json.loads(response.json())
+        data = response.json()
         directories = []
         files = []
         for file in data["FileStatuses"]["FileStatus"]:
@@ -137,9 +141,9 @@ class HDFSClient:
             elif file["type"] == "FILE":
                 files.append(file["pathSuffix"])
         for dir in directories:
-            logger.info(f"D {dir}")
+            logger.info(f"{dir} (DIR)")
         for file in files:
-            logger.info(f"F {file}")
+            logger.info(f"{file} (FILE)")
 
     def cd(self, to_path):
         target_path = self._build_path(self.current_hdfs_path, to_path)
