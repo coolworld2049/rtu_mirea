@@ -4,31 +4,17 @@ version = "0.1.0"
 description = ""
 authors = ["coolworld2049 <coolworld2049@gmail.com>"]
 readme = "README.md"
-packages = []
+packages = [{include = "rtu_mirea"}]
 
 [tool.poetry.dependencies]
-python = ">=3.11,<3.13"
-mimesis = "^11.1.0"
-
-[tool.poetry.group.big_data.dependencies]
+python = "^3.11"
 requests = "^2.31.0"
 loguru = "^0.7.2"
-pyhdfs = "^0.3.1"
-faker = "^19.12.0"
-python-dotenv = "^1.0.0"
-mimesis = "^11.1.0"
+
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.10.1"
 pytest = "^7.4.3"
-
-
-[tool.poetry.group.data_warehouse.dependencies]
-numpy = "^1.26.1"
-networkx = "^3.2.1"
-matplotlib = "^3.8.0"
-scipy = "^1.11.3"
-pandas = "^2.1.2"
 
 [build-system]
 requires = ["poetry-core"]
