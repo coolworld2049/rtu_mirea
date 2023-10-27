@@ -35,11 +35,11 @@ def test_get(hdfs_client, tmp_path):
     assert downloaded_file.read_text() == "Test file content"
 
 
-def test_add(hdfs_client, tmp_path):
+def test_append(hdfs_client, tmp_path):
     test_file = tmp_path / "test_file.txt"
     test_file.write_text("Test file content")
 
-    response = hdfs_client.add(str(test_file), "test_dir/test_file.txt")
+    response = hdfs_client.append(str(test_file), "test_dir/test_file.txt")
     assert response.status_code == 200
 
 
