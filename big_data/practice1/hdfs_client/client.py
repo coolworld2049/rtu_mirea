@@ -107,6 +107,7 @@ class HDFSClient:
             path=hdfs_file_name,
             params={"op": "OPEN"},
         )
+        response = requests.get(response.url)
         file_path.write_bytes(response.content)
 
     def add(self, file, hdfs_file_name):
