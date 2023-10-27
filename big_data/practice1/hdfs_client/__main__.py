@@ -45,19 +45,18 @@ class HDFSClientCLI(HDFSClient):
                 )
                 self.call_func(cmd)
         except KeyboardInterrupt:
-            pass
+            print("\n")
 
 
 def main():
     parser = argparse.ArgumentParser(
         prog="python -m hdfs_cli", description="HDFS Command Line Interface"
     )
-    parser.add_argument("host", type=str, help="HDFS host")
-    parser.add_argument("port", type=int, help="HDFS port")
-    parser.add_argument("user", type=str, help="HDFS user")
+    parser.add_argument("connection_string", type=str, help="HDFS user@host:port")
     args = parser.parse_args()
-
-    cli = HDFSClientCLI(args.host, args.port, args.user)
+    user = str(args.connection_string).split("@")[0]
+    host, port = str(args.connection_string).split("@")[1].split(":")
+    cli = HDFSClientCLI(host, port, user)
     cli.run()
 
 

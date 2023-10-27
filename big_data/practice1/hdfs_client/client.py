@@ -27,15 +27,19 @@ class HDFSClient:
         self, method, path=None, params=None, data=None
     ) -> Response | None:
         url = self._build_url(path, params)
-        with requests.request(
-            method,
-            url,
-            params=params,
-            data=data,
-        ) as resp:
-            resp.raise_for_status()
-            if resp.status_code == 200:
-                return resp
+        try:
+            with requests.request(
+                method,
+                url,
+                params=params,
+                data=data,
+            ) as resp:
+                resp.raise_for_status()
+                if resp.status_code == 200:
+                    return resp
+        except requests.exceptions.ConnectionError as ce:
+            logger.error(ce)
+            raise SystemExit
 
     @staticmethod
     def _build_path(old_path, new_path):
