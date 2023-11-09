@@ -8,6 +8,7 @@ from loguru import logger
 from mimesis import Generic
 
 HADOOP_HOME = "/home/ivanovnp/hadoop-2.9.2"
+PWD = pathlib.Path(__file__).parent
 
 
 class CrossCorrelation:
@@ -18,15 +19,13 @@ class CrossCorrelation:
         username,
         algorithm_name,
         db_file,
-        mapper_file_name="map.py",
-        reducer_file_name="reduce.py",
     ):
         self.username = username
         self.algorithm_name = algorithm_name
         self.db_file = db_file
-        self.hdfs_project_dir = f"/{pathlib.Path(__file__).parent.name.__str__()}"
-        self.mapper_file_name = mapper_file_name
-        self.reducer_file_name = reducer_file_name
+        self.mapper_file_path = PWD.joinpath(f"{algorithm_name}/map.py")
+        self.reducer_file_path = PWD.joinpath(f"{algorithm_name}/reduce.py")
+        self.hdfs_project_dir = PWD
         self.hdfs_client = pyhdfs.HdfsClient(hosts=f"{host}:{port}", user_name=username)
 
     def create_db(self):
@@ -55,14 +54,13 @@ class CrossCorrelation:
     def run_hadoop_job(self):
         _output_path = f"{self.hdfs_project_dir}/output/{self.algorithm_name}/"
         self.hdfs_client.delete(_output_path, recursive=True)
-        pwd = pathlib.Path(__file__).parent.__str__()
         cmd = (
             f"{HADOOP_HOME}/bin/yarn jar {HADOOP_HOME}/share/hadoop/tools/lib/hadoop-streaming-*.jar"
-            f" -files {pwd}/{self.algorithm_name}/{self.mapper_file_name},{pwd}/{self.algorithm_name}/{self.reducer_file_name}"
+            f" -files {self.mapper_file_path},{self.reducer_file_path}"
             f" -input {self.hdfs_project_dir}/input"
             f" -output {self.hdfs_project_dir}/output/{self.algorithm_name}"
-            f" -mapper {pwd}/{self.algorithm_name}/{self.mapper_file_name}"
-            f" -reducer {pwd}/{self.algorithm_name}/{self.reducer_file_name}"
+            f" -mapper {self.mapper_file_path}"
+            f" -reducer {self.reducer_file_path}"
         )
         print(cmd)
         res = os.system(cmd)
@@ -97,9 +95,9 @@ def main():
     parser.add_argument("--port", default=50070)
     parser.add_argument("--username", default="ivanovnp")
     parser.add_argument(
-        "--algorithm_name", choices=["pairs", "stripes"], default="stripes"
+        "--algorithm_name", choices=["pairs", "stripes"], default="pairs"
     )
-    parser.add_argument("--db_file", default="product_database.txt")
+    parser.add_argument("--db_file", default=f"{PWD}/product_database.txt")
 
     args = parser.parse_args()
     correlation = CrossCorrelation(
