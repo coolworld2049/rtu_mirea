@@ -2,7 +2,7 @@ import argparse
 import os
 import pathlib
 import random
-import tempfile
+import time
 
 import pyhdfs
 from loguru import logger
@@ -13,75 +13,92 @@ HADOOP_VERSION = "2.9.2"
 
 
 class CrossCorrelation:
-    def __init__(
-        self,
-        host,
-        port,
-        username,
-        algorithm_name,
-        db_file,
-    ):
+    def __init__(self, host, port, username, algorithm_name, input_path, output_path):
         self.username = username
         self.algorithm_name = algorithm_name
-        self.db_file = db_file
+        self.input_path = pathlib.Path(input_path)
+        self.output_path = pathlib.Path(output_path)
         self.mapper_file_path = PWD.joinpath(f"{algorithm_name}/map.py")
         self.reducer_file_path = PWD.joinpath(f"{algorithm_name}/reduce.py")
-        self.hdfs_project_dir = f"/user/{self.username}/{PWD.name}"
         self.hdfs_client = pyhdfs.HdfsClient(hosts=f"{host}:{port}", user_name=username)
         self.hadoop_home = f"/home/{self.username}/hadoop-{HADOOP_VERSION}"
 
+        self.output_path.mkdir(exist_ok=True)
         os.system(f"chmod +x {self.mapper_file_path} {self.reducer_file_path}")
 
-    def create_db(self):
+    @property
+    def get_input_path_str(self):
+        return self.input_path.__str__()
+
+    @property
+    def get_output_path_str(self):
+        return self.output_path.__str__()
+
+    def _create_input(self, product_number: int = 200):
+        if self.input_path.exists():
+            return True
         generic = Generic()
         fake_products = [generic.text.word().replace(" ", "") for _ in range(100)]
         product_names = ""
-        product_number = 200
         for a in range(product_number):
             _product_names = " ".join(
-                set(random.choices(fake_products, k=random.randint(4, 12)))
+                set(random.choices(fake_products, k=random.randint(6, 18)))
             )
             if a != product_number - 1:
                 _product_names += "\n"
             product_names += _product_names
-        pathlib.Path(self.db_file).write_text(product_names)
-        logger.debug(f"Created db {self.db_file}")
+        self.input_path.write_text(product_names)
+        logger.debug(f"Created {self.input_path}")
 
-    def upload_db(self):
-        self.hdfs_client.delete(f"{self.hdfs_project_dir}/input", recursive=True)
+    def _upload_input(self):
+        self.hdfs_client.delete(self.get_input_path_str, recursive=True)
         self.hdfs_client.create(
-            f"{self.hdfs_project_dir}/input",
-            pathlib.Path(self.db_file).read_bytes(),
+            self.get_input_path_str,
+            pathlib.Path(self.input_path).read_bytes(),
         )
-        logger.debug(f"Uploaded db {self.db_file} to HDFS")
+        logger.debug(f"Uploaded {self.input_path} to hdfs")
 
-    def run_hadoop_job(self):
-        _output_path = f"{self.hdfs_project_dir}/output/{self.algorithm_name}/"
-        self.hdfs_client.delete(_output_path, recursive=True)
+    def yarn_jar_streaming(self, local_save: bool = True):
+        self._create_input()
+        self._upload_input()
+        self.hdfs_client.delete(self.get_output_path_str, recursive=True)
         cmd = (
             f"{self.hadoop_home}/bin/yarn jar {self.hadoop_home}/share/hadoop/tools/lib/hadoop-streaming-*.jar"
             f" -files {self.mapper_file_path},{self.reducer_file_path}"
-            f" -input {self.hdfs_project_dir}/input"
-            f" -output {self.hdfs_project_dir}/output/{self.algorithm_name}"
+            f" -input {self.get_input_path_str}"
+            f" -output {self.get_output_path_str}"
             f" -mapper {self.mapper_file_path}"
             f" -reducer {self.reducer_file_path}"
         )
         print(cmd)
-        res = os.system(cmd)
-        if res != 0:
-            raise Exception(f"cmd output {res}")
+        os.system(cmd)
+        if local_save:
+            file_name = "part-00000"
+            path = self.output_path.joinpath(file_name).__str__()
+            pathlib.Path(path).write_bytes(self.hdfs_client.open(path).read())
         logger.info("Hadoop job completed")
 
-    def get_adviser(self, product: str = lambda: input("Enter product name: ")):
-        advise_count = 10
-        result = {}
-        with self.hdfs_client.open(
-            f"{self.hdfs_project_dir}/output/{self.algorithm_name}/part-00000"
-        ) as res:
-            lines = res.read().decode("utf-8").split("\n")
 
-            for i in range(len(lines) - 1):
-                products, count = lines[i].strip().split("\t")
+class Adviser:
+    def __init__(self, hdfs_client: pyhdfs.HdfsClient, output_path: pathlib.Path):
+        self.hdfs_client: pyhdfs.HdfsClient = hdfs_client
+        self.output_path = output_path
+
+    def advise(self, algorithm_name: str, product: str | None = None, advise_count=10):
+        logger.info(
+            f"algorithm_name '{algorithm_name}' product '{product}' advise_count '{advise_count}'"
+        )
+        self.output_path.parents[1].joinpath(algorithm_name)
+        if not product:
+            product = input("Enter product name: ")
+        result = {}
+        file_name = "part-00000"
+        with self.hdfs_client.open(
+            self.output_path.joinpath(file_name).__str__()
+        ) as rf:
+            ln = rf.read().decode("UTF-8").split("\n")
+            for i in range(len(ln) - 1):
+                products, count = ln[i].strip().split("\t")
                 products = products.split(" ")
                 if product == products[0]:
                     result[products[1]] = int(count)
@@ -90,7 +107,7 @@ class CrossCorrelation:
 
         sorted_result = sorted(result.items(), key=lambda item: (-item[1], item[0]))
         for index, (product, count) in enumerate(sorted_result[:advise_count], start=1):
-            logger.info(f"{index}) {product} ({count})")
+            logger.info(f"[{product}] {count}")
 
 
 def main():
@@ -101,8 +118,12 @@ def main():
     parser.add_argument(
         "--algorithm_name", choices=["pairs", "stripes"], default="pairs"
     )
+    parser.add_argument("--force", default=False)
+    parser.add_argument("--advise", help="--advise [product_name]")
     parser.add_argument(
-        "--db_file", default=f"{tempfile.gettempdir()}/product_database.txt"
+        "--advise-number",
+        default=10,
+        help="--advise-number [integer]",
     )
 
     args = parser.parse_args()
@@ -111,12 +132,24 @@ def main():
         port=args.port,
         username=args.username,
         algorithm_name=args.algorithm_name,
-        db_file=args.db_file,
+        input_path=f"{PWD}/input",
+        output_path=f"{PWD}/output/{args.algorithm_name}",
     )
-    correlation.create_db()
-    correlation.upload_db()
-    correlation.run_hadoop_job()
-    correlation.get_adviser()
+    if args.force or not correlation.hdfs_client.exists(
+        correlation.get_output_path_str
+    ):
+        correlation.yarn_jar_streaming()
+
+    adviser = Adviser(
+        hdfs_client=correlation.hdfs_client, output_path=correlation.output_path
+    )
+    try:
+        adviser.advise(args.algorithm_name, product=args.advise)
+    except pyhdfs.HdfsFileNotFoundException as e:
+        correlation.yarn_jar_streaming()
+        time.sleep(2)
+        adviser.advise(args.algorithm_name, product=args.advise)
+        logger.error(e)
 
 
 if __name__ == "__main__":
