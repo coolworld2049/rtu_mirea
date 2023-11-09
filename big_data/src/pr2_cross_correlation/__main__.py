@@ -2,6 +2,7 @@ import argparse
 import os
 import pathlib
 import random
+import tempfile
 
 import pyhdfs
 from loguru import logger
@@ -25,8 +26,10 @@ class CrossCorrelation:
         self.db_file = db_file
         self.mapper_file_path = PWD.joinpath(f"{algorithm_name}/map.py")
         self.reducer_file_path = PWD.joinpath(f"{algorithm_name}/reduce.py")
-        self.hdfs_project_dir = PWD
+        self.hdfs_project_dir = f"/user/{self.username}/{PWD.name}"
         self.hdfs_client = pyhdfs.HdfsClient(hosts=f"{host}:{port}", user_name=username)
+
+        os.system(f"chmod +x {self.mapper_file_path} {self.reducer_file_path}")
 
     def create_db(self):
         generic = Generic()
@@ -34,7 +37,9 @@ class CrossCorrelation:
         product_names = ""
         product_number = 200
         for a in range(product_number):
-            _product_names = " ".join(set(random.choices(fake_products, k=random.randint(4, 12))))
+            _product_names = " ".join(
+                set(random.choices(fake_products, k=random.randint(4, 12)))
+            )
             if a != product_number - 1:
                 _product_names += "\n"
             product_names += _product_names
@@ -42,9 +47,7 @@ class CrossCorrelation:
         logger.debug(f"Created db {self.db_file}")
 
     def upload_db(self):
-        self.hdfs_client.delete(
-            f"{self.hdfs_project_dir}/input", recursive=True
-        )
+        self.hdfs_client.delete(f"{self.hdfs_project_dir}/input", recursive=True)
         self.hdfs_client.create(
             f"{self.hdfs_project_dir}/input",
             pathlib.Path(self.db_file).read_bytes(),
@@ -97,7 +100,9 @@ def main():
     parser.add_argument(
         "--algorithm_name", choices=["pairs", "stripes"], default="pairs"
     )
-    parser.add_argument("--db_file", default=f"{PWD}/product_database.txt")
+    parser.add_argument(
+        "--db_file", default=f"{tempfile.gettempdir()}/product_database.txt"
+    )
 
     args = parser.parse_args()
     correlation = CrossCorrelation(
