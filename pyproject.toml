@@ -18,6 +18,10 @@ pyhdfs = "^0.3.1"
 black = "^23.10.1"
 pytest = "^7.4.3"
 
+
+[tool.poetry.group.big_data.dependencies]
+mrjob = "^0.7.4"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
