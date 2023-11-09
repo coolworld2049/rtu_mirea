@@ -1,22 +1,19 @@
 #!/usr/bin/python3
 import sys
 
-currKey = None
-currSum = 0
+curr_key = None
+curr_sum = 0
+
 for line in sys.stdin:
-    splitted = line.strip().split("\t")
-    if len(splitted) != 2:
-        continue
+    key, value = line.strip().split("\t", 1)
 
-    key = splitted[0]
-    if not currKey:
-        currKey = key
+    if curr_key != key:
+        if curr_key is not None:
+            print(f"{curr_key}\t{curr_sum}")
+        curr_key = key
+        curr_sum = 0
 
-    if currKey != key:
-        print(f"{currKey}\t{currSum}")
-        currKey = key
-        currSum = 0
+    curr_sum += int(value)
 
-    currSum += int(splitted[1])
-
-print(f"{currKey}\t{currSum}")
+if curr_key is not None:
+    print(f"{curr_key}\t{curr_sum}")

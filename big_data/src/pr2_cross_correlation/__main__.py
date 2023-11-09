@@ -8,8 +8,8 @@ import pyhdfs
 from loguru import logger
 from mimesis import Generic
 
-HADOOP_HOME = "/home/ivanovnp/hadoop-2.9.2"
 PWD = pathlib.Path(__file__).parent
+HADOOP_VERSION = "2.9.2"
 
 
 class CrossCorrelation:
@@ -28,6 +28,7 @@ class CrossCorrelation:
         self.reducer_file_path = PWD.joinpath(f"{algorithm_name}/reduce.py")
         self.hdfs_project_dir = f"/user/{self.username}/{PWD.name}"
         self.hdfs_client = pyhdfs.HdfsClient(hosts=f"{host}:{port}", user_name=username)
+        self.hadoop_home = f"/home/{self.username}/hadoop-{HADOOP_VERSION}"
 
         os.system(f"chmod +x {self.mapper_file_path} {self.reducer_file_path}")
 
@@ -58,7 +59,7 @@ class CrossCorrelation:
         _output_path = f"{self.hdfs_project_dir}/output/{self.algorithm_name}/"
         self.hdfs_client.delete(_output_path, recursive=True)
         cmd = (
-            f"{HADOOP_HOME}/bin/yarn jar {HADOOP_HOME}/share/hadoop/tools/lib/hadoop-streaming-*.jar"
+            f"{self.hadoop_home}/bin/yarn jar {self.hadoop_home}/share/hadoop/tools/lib/hadoop-streaming-*.jar"
             f" -files {self.mapper_file_path},{self.reducer_file_path}"
             f" -input {self.hdfs_project_dir}/input"
             f" -output {self.hdfs_project_dir}/output/{self.algorithm_name}"

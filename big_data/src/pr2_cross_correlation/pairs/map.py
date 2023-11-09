@@ -2,7 +2,13 @@
 import sys
 
 for line in sys.stdin:
-    products = line.strip().split(" ")
-    for i in range(len(products)):
-        for j in range(i + 1, len(products)):
-            print(f"{max(products[i], products[j])} {min(products[i], products[j])}\t1")
+    products = line.strip().split()
+    n = len(products)
+
+    for i in range(n):
+        for j in range(i + 1, n):
+            product1, product2 = products[i], products[j]
+            if product1 < product2:
+                print(f"{product1} {product2}\t1")
+            else:
+                print(f"{product2} {product1}\t1")
