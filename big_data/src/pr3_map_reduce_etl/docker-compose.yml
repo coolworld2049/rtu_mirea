@@ -20,5 +20,3 @@ services:
       - "10002:10002"
     depends_on:
       - metastore-standalone
-    volumes:
-      - ./hive:/queries
