@@ -10,7 +10,6 @@ FILE=part-00000
 
 echo -e "\nWORKDIR $SCRIPTDIR"
 hdfs dfs -rm -r /user/ivanovnp/output/"$1"
-python -m gen_db -o input -n 500 -rr 4,16
 
 echo -e "ALGORITHM_NAME $ALGORITHM_NAME"
 # shellcheck disable=SC2086
