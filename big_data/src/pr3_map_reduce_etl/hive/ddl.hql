@@ -1,15 +1,15 @@
-CREATE TABLE IF NOT EXISTS products
+CREATE EXTERNAL TABLE IF NOT EXISTS products
 (
     product_id    INT,
     product_name  STRING,
     product_price FLOAT
 )
-    ROW FORMAT DELIMITED
-        FIELDS TERMINATED BY ','
-        LINES TERMINATED BY '\n'
-    TBLPROPERTIES ("skip.header.line.count" = "1");
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+TBLPROPERTIES ("skip.header.line.count" = "1");
 
-CREATE TABLE IF NOT EXISTS orders
+CREATE EXTERNAL TABLE IF NOT EXISTS orders
 (
     order_id   INT,
     user_id    INT,
@@ -17,13 +17,12 @@ CREATE TABLE IF NOT EXISTS orders
     quantity   INT,
     order_date STRING
 )
-    ROW FORMAT DELIMITED
-        FIELDS TERMINATED BY ','
-        LINES TERMINATED BY '\n'
-    TBLPROPERTIES ("skip.header.line.count" = "1");
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+TBLPROPERTIES ("skip.header.line.count" = "1");
 
-
-CREATE TABLE IF NOT EXISTS customers
+CREATE EXTERNAL TABLE IF NOT EXISTS customers
 (
     customer_id    INT,
     customer_name  STRING,
@@ -31,7 +30,7 @@ CREATE TABLE IF NOT EXISTS customers
     product_id     INT,
     order_date     STRING
 )
-    ROW FORMAT DELIMITED
-        FIELDS TERMINATED BY ','
-        LINES TERMINATED BY '\n'
-    TBLPROPERTIES ("skip.header.line.count" = "1");
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n'
+TBLPROPERTIES ("skip.header.line.count" = "1");

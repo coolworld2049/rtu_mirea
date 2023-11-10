@@ -21,5 +21,5 @@ services:
     depends_on:
       - metastore-standalone
     volumes:
-      - ./hive:/opt/hive/hive
       - ./data:/opt/hive/data
+      - ./hive:/opt/hive/hive
