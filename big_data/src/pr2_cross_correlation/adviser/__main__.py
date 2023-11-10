@@ -1,5 +1,6 @@
 import argparse
 import ast
+import json
 import pathlib
 from contextlib import suppress
 
@@ -12,26 +13,50 @@ class Adviser:
         self.username = username
         self.hdfs_client = pyhdfs.HdfsClient(hosts=f"{host}:{port}", user_name=username)
 
+    @staticmethod
+    def pairs(key, value, target_key):
+        key: list[str] = ast.literal_eval(key)
+        with suppress(ValueError):
+            key.index(target_key)
+            return key, int(value)
+
+    @staticmethod
+    def stripes(key, value, target_key):
+        value: dict[str, int] = json.loads(value)
+        if value.get(target_key):
+            sorted_value = sorted(value.items(), key=lambda c: -c[1])
+            return key, sorted_value
+
     def advise(self, file_path: pathlib.Path | str, product: str, advise_count=10):
         file_path = pathlib.Path(file_path)
         logger.info(
             f"part_path {file_path} product '{product}' advise_count '{advise_count}'"
         )
         result = []
+        filtered_result = []
         with self.hdfs_client.open(file_path.__str__()) as rf:
             file = rf.read().decode("UTF-8")
-            # logger.debug(f"file_path {file_path}: \n{file}")
             lines = file.split("\n")
             for i in range(len(lines) - 1):
-                _products, _count = lines[i].strip().split("\t")
-                products: list[str] = ast.literal_eval(_products)
-                with suppress(ValueError):
-                    product_index = products.index(product)
-                    del products[product_index]
-                    result.append((products, int(_count)))
-
-        final_result = list(map(lambda c: c[0][0], sorted(result, key=lambda c: -c[1])))
-        advices = final_result[:advise_count]
+                key, value = lines[i].strip().split("\t")
+                if "pairs" in file_path.__str__():
+                    local_result = self.pairs(key, value, product)
+                elif "stripes" in file_path.__str__():
+                    local_result = self.stripes(key, value, product)
+                if local_result:
+                    result.append(local_result)
+        if "pairs" in file_path.__str__():
+            sorted_result = sorted(result, key=lambda c: -c[1])
+            logger.debug(
+                f"algorithm 'pairs' - sorted result: {sorted_result[:advise_count]}"
+            )
+            filtered_result = list(map(lambda c: c[0][1], sorted_result))
+        elif "stripes" in file_path.__str__():
+            logger.debug(
+                f"algorithm 'stripes' - sorted result: {result[:advise_count]}"
+            )
+            filtered_result = list(map(lambda c: c[1][0][0], result))
+        advices = filtered_result[:advise_count]
         logger.info("advices:\n{}".format("\n".join(advices)))
         return advices
 

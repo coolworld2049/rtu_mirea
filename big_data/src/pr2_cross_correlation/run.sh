@@ -3,16 +3,19 @@
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit
 
-ALGORITHM_PATH="$1"
-OUTPUT_PATH=output/"$(basename "$ALGORITHM_PATH")"
+ALGORITHM_NAME="$1"
+OUTPUT_PATH=output/"$(basename "$ALGORITHM_NAME")"
+MR_JOB_KWARGS="-o $OUTPUT_PATH -r hadoop $2"
 FILE=part-00000
 
-echo -e "WORKDIR $SCRIPTDIR"
-hdfs dfs -rm -r /user/ivanovnp/output/"$1" &>/dev/null
+echo -e "\nWORKDIR $SCRIPTDIR"
+hdfs dfs -rm -r /user/ivanovnp/output/"$1"
 python -m gen_db -o input -n 500 -rr 4,16
 
-echo -e "ALGORITHM_PATH $ALGORITHM_PATH"
-python -m jobs."$ALGORITHM_PATH" input -o "$OUTPUT_PATH" -r hadoop
+echo -e "ALGORITHM_NAME $ALGORITHM_NAME"
+# shellcheck disable=SC2086
+python -m jobs."$ALGORITHM_NAME" input $MR_JOB_KWARGS
 
 echo -e "\nFILE $FILE"
-hdfs dfs -cat /user/ivanovnp/"$OUTPUT_PATH"/part-00000
+[ -d parts ] || mkdir parts
+hdfs dfs -cat /user/ivanovnp/"$OUTPUT_PATH"/"$FILE" > parts/"$(basename "$OUTPUT_PATH"_"$FILE")"

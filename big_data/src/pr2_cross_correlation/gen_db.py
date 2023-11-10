@@ -4,6 +4,10 @@ import random
 
 from loguru import logger
 from mimesis import Generic
+from mimesis.types import Seed
+
+generic = Generic()
+generic.seed = 999
 
 
 def gen_db(
@@ -12,7 +16,6 @@ def gen_db(
     rand_range: list[int],
     delimiter: str,
 ):
-    generic = Generic()
     fake_products = [generic.text.word().replace(" ", "") for _ in range(100)]
     product_names = ""
     for a in range(product_number):
@@ -32,7 +35,7 @@ def gen_db(
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-o", "--output_path")
+    parser.add_argument("-o", "--output_path", default="input")
     parser.add_argument("-n", "--product_number", default=200, type=int)
     parser.add_argument("-rr", "--rand_range", default="2,10", help="start,stop")
     parser.add_argument("-d", "--delimiter", default=",")
