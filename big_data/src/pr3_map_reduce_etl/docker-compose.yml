@@ -20,3 +20,6 @@ services:
       - "10002:10002"
     depends_on:
       - metastore-standalone
+    volumes:
+      - ./hive:/opt/hive/hive
+      - ./data:/opt/hive/data

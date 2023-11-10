@@ -1,22 +1,37 @@
-CREATE TABLE customer
+CREATE TABLE IF NOT EXISTS products
 (
-    customer_id   INT,
-    customer_name STRING,
-    email         STRING,
-    address       STRING
-);
+    product_id    INT,
+    product_name  STRING,
+    product_price FLOAT
+)
+    ROW FORMAT DELIMITED
+        FIELDS TERMINATED BY ','
+        LINES TERMINATED BY '\n'
+    TBLPROPERTIES ("skip.header.line.count" = "1");
 
-CREATE TABLE orders
+CREATE TABLE IF NOT EXISTS orders
 (
-    order_id     INT,
-    customer_id  INT,
-    order_date   STRING,
-    total_amount DOUBLE
-);
+    order_id   INT,
+    user_id    INT,
+    product_id INT,
+    quantity   INT,
+    order_date STRING
+)
+    ROW FORMAT DELIMITED
+        FIELDS TERMINATED BY ','
+        LINES TERMINATED BY '\n'
+    TBLPROPERTIES ("skip.header.line.count" = "1");
 
-CREATE TABLE products
+
+CREATE TABLE IF NOT EXISTS customers
 (
-    product_id   INT,
-    product_name STRING,
-    price        DOUBLE
-);
+    customer_id    INT,
+    customer_name  STRING,
+    customer_email STRING,
+    product_id     INT,
+    order_date     STRING
+)
+    ROW FORMAT DELIMITED
+        FIELDS TERMINATED BY ','
+        LINES TERMINATED BY '\n'
+    TBLPROPERTIES ("skip.header.line.count" = "1");
