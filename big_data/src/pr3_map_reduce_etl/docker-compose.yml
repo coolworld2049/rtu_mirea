@@ -1,0 +1,20 @@
+version: '3.9'
+
+services:
+  metastore-standalone:
+    image: apache/hive:4.0.0-alpha-2
+    container_name: metastore-standalone
+    environment:
+      - SERVICE_NAME=metastore
+    ports:
+      - "9083:9083"
+  hiveserver2-standalone:
+    image: apache/hive:4.0.0-alpha-2
+    container_name: hiveserver2-standalone
+    environment:
+      - SERVICE_NAME=hiveserver2
+    ports:
+      - "10000:10000"
+      - "10002:10002"
+    depends_on:
+      - metastore-standalone
