@@ -1,0 +1,11 @@
+customer_id,customer_name,email,address
+1,John Taker,john@example.com,123 Main St
+2,Will Smith,will@example.com,456 Oak Ave
+3,Bob Johnson,bob@example.com,789 Elm St
+4,Alice Williams,alice@example.com,101 Pine St
+5,Charlie Brown,charlie@example.com,202 Cedar Ave
+6,Emma Davis,emma@example.com,303 Maple Ave
+7,Michael Wilson,michael@example.com,404 Birch St
+8,Sophia Lee,sophia@example.com,505 Spruce Ave
+9,James Miller,james@example.com,606 Oak St
+10,Olivia Jones,olivia@example.com,707 Elm Ave
