@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  hadoop:
+    build:
+      context: hadoop-single-node-cluster
+      dockerfile: Dockerfile
+    container_name: hadoop
+    hostname: hadoop
+    ports:
+      - "9864:9864"
+      - "9870:9870"
+      - "8088:8088"
+      - "9000:9000"
