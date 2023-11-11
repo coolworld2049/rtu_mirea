@@ -12,7 +12,7 @@ class CrossCorrelationPairs(MRJob):
         # Формирует все возможные пары товаров в строке и передает их в reducer
         for i in range(len(items)):
             for j in range(i + 1, len(items)):
-                yield (items[i], items[j]), 1
+                yield (max(items[i], items[j]), min(items[i], items[j])), 1
 
     def reducer(self, key, values):
         # Суммирует значения для каждой уникальной пары товаров

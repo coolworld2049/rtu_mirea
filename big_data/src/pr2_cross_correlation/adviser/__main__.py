@@ -15,25 +15,27 @@ class Adviser:
 
     @staticmethod
     def pairs(key, value, target_key):
-        key: list[str] = ast.literal_eval(key)
+        _key: list[str] = ast.literal_eval(key)
         with suppress(ValueError):
-            key.index(target_key)
-            return key, int(value)
+            if target_key in _key:
+                res = None
+                for k in _key:
+                    if k != target_key:
+                        res = k
+                return res, int(value)
 
     @staticmethod
-    def stripes(key, value, target_key):
+    def stripes(value, target_key):
         value: dict[str, int] = json.loads(value)
         if value.get(target_key):
-            sorted_value = sorted(value.items(), key=lambda c: -c[1])
-            return key, sorted_value
+            return value
 
     def advise(self, file_path: pathlib.Path | str, product: str, advise_count=10):
         file_path = pathlib.Path(file_path)
         logger.info(
             f"part_path {file_path} product '{product}' advise_count '{advise_count}'"
         )
-        result = []
-        filtered_result = []
+        result = {}
         with self.hdfs_client.open(file_path.__str__()) as rf:
             file = rf.read().decode("UTF-8")
             lines = file.split("\n")
@@ -41,23 +43,16 @@ class Adviser:
                 key, value = lines[i].strip().split("\t")
                 if "pairs" in file_path.__str__():
                     local_result = self.pairs(key, value, product)
+                    if local_result:
+                        result[local_result[0]] = local_result[1]
                 elif "stripes" in file_path.__str__():
-                    local_result = self.stripes(key, value, product)
-                if local_result:
-                    result.append(local_result)
-        if "pairs" in file_path.__str__():
-            sorted_result = sorted(result, key=lambda c: -c[1])
-            logger.debug(
-                f"algorithm 'pairs' - sorted result: {sorted_result[:advise_count]}"
-            )
-            filtered_result = list(map(lambda c: c[0][1], sorted_result))
-        elif "stripes" in file_path.__str__():
-            logger.debug(
-                f"algorithm 'stripes' - sorted result: {result[:advise_count]}"
-            )
-            filtered_result = list(map(lambda c: c[1][0][0], result))
-        advices = filtered_result[:advise_count]
-        logger.info("advices:\n{}".format("\n".join(advices)))
+                    local_result = self.stripes(value, product)
+                    if local_result:
+                        result = local_result
+        sorted_result = sorted(result.items(), key=lambda c: -c[1])
+        advices = sorted_result[:advise_count]
+        advices = sorted(advices)
+        logger.info("advices:\n{}".format("\n".join([x[0] for x in advices])))
         return advices
 
 
