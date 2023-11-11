@@ -3,6 +3,5 @@
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit
 
-python -m gen_db -o input -n 60 -rr 4,12
-bash run.sh pairs "$1"
-bash run.sh stripes "$1"
+hdfs dfs -rm -r 'pr3_map_reduce_etl/output';
+pig -f pig/process_data.pig
