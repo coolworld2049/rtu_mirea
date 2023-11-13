@@ -2,7 +2,7 @@
 
 # Define Hive version and installation directory
 HIVE_VERSION=3.1.2
-HIVE_HOME=$HADOOP_HOME/hive
+HIVE_HOME=$HADOOP_OME/hive
 
 if [ -d "$HIVE_HOME" ]; then
   echo "Apache Hive is already installed in $HIVE_HOME."
@@ -14,7 +14,8 @@ else
 fi
 
 echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
-echo 'export PATH=$PATH:$HIVE_HOME/bin' >> ~/.bashrc
+echo 'export CLASSPATH=$CLASSPATH:$HIVE_HOME/lib/*:' >> ~/.bashrc
+echo 'export PATH=$PATH:$HIVE_HOME/bin:' >> ~/.bashrc
 source ~/.bashrc
 
 echo "Hive downloaded and installed successfully."
@@ -31,23 +32,18 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 <configuration>
 
 <property>
-  <name>hive.metastore.local</name>
-  <value>true</value>
+  <name>hive.metastore.warehouse.dir</name>
+  <value>$HOME/warehouse</value>
+  <description>location of default database for the warehouse</description>
 </property>
 
 <property>
-  <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:derby://127.0.0.1:49999/metastore_db;create=true</value>
+  <name>hadoop.proxyuser.$USER.groups</name>
+  <value>*</value>
 </property>
-
 <property>
-  <name>javax.jdo.option.ConnectionDriverName</name>
-  <value>org.apache.derby.jdbc.EmbeddedDriver</value>
-</property>
-
-<property>
-  <name>hive.aux.jars.path</name>
-  <value>$DERBY_HOME/lib/derbyclient.jar</value>
+  <name>hadoop.proxyuser.$USER.hosts</name>
+  <value>*</value>
 </property>
 
 </configuration>

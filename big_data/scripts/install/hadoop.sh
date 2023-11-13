@@ -28,7 +28,7 @@ echo "Java environment variables set up successfully."
 # Set up Hadoop environment variables
 echo "Setting up Hadoop environment variables..."
 echo "HADOOP_HOME=$HADOOP_HOME" >> ~/.bashrc
-echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin" >> ~/.bashrc
+echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin\$HADOOP_HOME/sbin:" >> ~/.bashrc
 echo "export JAVA_HOME" >> ~/.bashrc
 echo "export HADOOP_HOME" >> ~/.bashrc
 echo "export PATH" >> ~/.bashrc
