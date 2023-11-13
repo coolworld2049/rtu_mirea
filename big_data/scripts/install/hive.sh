@@ -1,11 +1,12 @@
 #!/bin/bash
 
+# Define Hive version and installation directory
 HIVE_VERSION=3.1.2
-HIVE_HOME=/opt/hive
+HIVE_HOME=$HADOOP_HOME/hive
 
-sudo mkdir -p $HIVE_HOME
-sudo chown -R $USER:$USER $HIVE_HOME
+echo "Downloading and installing Hive $HIVE_VERSION..."
 
+# Download and extract Hive
 wget https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
 tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
 
@@ -13,14 +14,27 @@ echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
 echo 'export PATH=$PATH:$HIVE_HOME/bin' >> ~/.bashrc
 source ~/.bashrc
 
+echo "Hive downloaded and installed successfully."
+
+# Copy Hive configuration files to /etc/hive/conf
+echo "Copying Hive configuration files..."
 sudo mkdir -p /etc/hive/conf
 sudo cp $HIVE_HOME/conf/*.xml /etc/hive/conf
+echo "Hive configuration files copied successfully."
 
+# Create Hive warehouse directory in HDFS
+echo "Creating Hive warehouse directory in HDFS..."
 hdfs dfs -mkdir /user/$USER/warehouse
 hdfs dfs -chmod g+w /user/$USER/warehouse
+echo "Hive warehouse directory in HDFS created successfully."
 
+# Start Derby metastore
+echo "Starting Derby metastore..."
 bash derby.sh
+echo "Derby metastore started successfully."
 
+# Configure Hive metastore in hive-site.xml
+echo "Configuring Hive metastore in hive-site.xml..."
 sudo mkdir ~/metastore
 sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 <configuration>
@@ -67,5 +81,9 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 
 </configuration>
 EOL"
+echo "Hive metastore configured successfully."
 
+# Initialize Hive metastore schema
+echo "Initializing Hive metastore schema..."
 schematool -dbType derby -info
+echo "Hive metastore schema initialized successfully."
