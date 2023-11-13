@@ -7,14 +7,14 @@ sudo mkdir -p $HADOOP_HOME
 sudo chown -R $USER:$USER $HADOOP_HOME
 
 wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
-tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME
+tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
 
 sudo apt-get install openjdk-8-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 echo "JAVA_HOME=$JAVA_HOME" >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh
 echo "JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
 echo "HADOOP_HOME=$HADOOP_HOME" >> ~/.bashrc
-echo "PATH=\$PATH:"$JAVA_HOME"bin:$HADOOP_HOME/bin" >> ~/.bashrc
+echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin" >> ~/.bashrc
 echo "export JAVA_HOME" >> ~/.bashrc
 echo "export HADOOP_HOME" >> ~/.bashrc
 echo "export PATH" >> ~/.bashrc
