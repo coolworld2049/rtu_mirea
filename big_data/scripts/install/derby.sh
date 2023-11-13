@@ -6,13 +6,11 @@ DERBY_VERSION=10.15.2.0
 # Define the installation directory
 DERBY_INSTALL_DIR=$HADOOP_HOME/derby
 
-# Create the installation directory
-sudo mkdir -p $DERBY_INSTALL_DIR
-
 # Check if Derby is already installed
 if [ -d "$DERBY_INSTALL_DIR" ]; then
   echo "Apache Derby is already installed in $DERBY_INSTALL_DIR."
 else
+  sudo mkdir -p $DERBY_INSTALL_DIR
   echo "Downloading Apache Derby..."
   sudo wget -P /tmp https://downloads.apache.org/db/derby/db-derby-$DERBY_VERSION/db-derby-$DERBY_VERSION-bin.tar.gz
 fi

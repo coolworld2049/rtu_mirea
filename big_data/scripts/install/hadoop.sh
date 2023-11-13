@@ -4,11 +4,10 @@
 HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/local/hadoop
 
-sudo mkdir -p $HADOOP_HOME
-
 if [ -d "$HADOOP_HOME" ]; then
   echo "Apache Hadoop is already installed in $HADOOP_HOME."
 else
+  sudo mkdir -p $HADOOP_HOME
   echo "Downloading and installing Hadoop $HADOOP_VERSION..."
   sudo wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
   sudo tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
