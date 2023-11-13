@@ -7,15 +7,12 @@ HIVE_HOME=$HADOOP_HOME/hive
 sudo mkdir -p $HIVE_HOME
 
 if [ -d "$HIVE_HOME" ]; then
-  echo "Apache Hive is already installed in $HIVE_HOME. Exiting."
-  exit 0
+  echo "Apache Hive is already installed in $HIVE_HOME."
+else
+  echo "Downloading and installing Hive $HIVE_VERSION..."
+  sudo wget -nc https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
+  sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
 fi
-
-echo "Downloading and installing Hive $HIVE_VERSION..."
-
-# Download and extract Hive
-sudo wget -nc https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
-sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
 
 echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
 echo 'export PATH=$PATH:$HIVE_HOME/bin' >> ~/.bashrc
