@@ -9,9 +9,10 @@ cd /tmp
 wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 tar -xzf hadoop-$HADOOP_VERSION.tar.gz
 mv hadoop-$HADOOP_VERSION $HADOOP_HOME
+rm -r hadoop-$HADOOP_VERSION.tar.gz
 cd $SCRIPTDIR
 
-sudo apt install default-jdk
+sudo apt-get install openjdk-8-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 echo "JAVA_HOME=$JAVA_HOME" >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh
 echo "JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
