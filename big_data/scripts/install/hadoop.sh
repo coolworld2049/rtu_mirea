@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HADOOP_VERSION=2.10.2
-HADOOP_HOME=/usr/local/hadoop
+HADOOP_HOME=/usr/lib/hadoop
 
 sudo mkdir -p $HADOOP_HOME
 sudo chown -R $USER:$USER $HADOOP_HOME

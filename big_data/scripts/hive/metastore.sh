@@ -11,3 +11,4 @@ mkdir -p $metastore_path
 cd $metastore_path || exit
 
 schematool -dbType derby -initSchema
+schematool -dbType derby -info
