@@ -1,19 +1,26 @@
 #!/bin/bash
 
-cd ~
+SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 
-# tar -xvf jdk-8u221-linux-x64.tar.gz
+HADOOP_VERSION=2.9.2
+HADOOP_HOME=/usr/local/hadoop
 
-wget http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-2.9.2/hadoop-2.9.2.tar.gz
-tar -xvf hadoop-2.9.2.tar.gz
+cd /tmp
+wget http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
+tar -xzf hadoop-$HADOOP_VERSION.tar.gz
+mv hadoop-$HADOOP_VERSION $HADOOP_HOME
+cd $SCRIPTDIR
 
-echo "# User specific environment and startup programs" >> ~/.bashrc
-echo "JAVA_HOME=$HOME/jdk1.8.0_221" >> ~/.bashrc
-echo "HADOOP_HOME=$HOME/hadoop-2.9.2" >> ~/.bashrc
-echo "PATH=$PATH:$HOME/.local/bin:$HOME/bin:$JAVA_HOME/bin:$HADOOP_HOME/bin" >> ~/.bashrc
+sudo apt install default-jdk
+JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
+echo "JAVA_HOME=$JAVA_HOME" >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh
+echo "JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
+echo "HADOOP_HOME=$HADOOP_HOME" >> ~/.bashrc
+echo "PATH=\$PATH:$JAVA_HOME/bin:$HADOOP_HOME/bin" >> ~/.bashrc
 echo "export JAVA_HOME" >> ~/.bashrc
 echo "export HADOOP_HOME" >> ~/.bashrc
 echo "export PATH" >> ~/.bashrc
+source ~/.bashrc
 
 mkdir ~/.ssh
 chmod 700 ~/.ssh
@@ -21,11 +28,7 @@ ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 chmod 0600 ~/.ssh/authorized_keys
 
-cd ~/hadoop-2.9.2/etc/hadoop
-
-echo "export JAVA_HOME=$HOME/jdk1.8.0_221" >> hadoop-env.sh
-
-cat > core-site.xml <<EOL
+cat > $HADOOP_HOME/core-site.xml <<EOL
 <configuration>
   <property>
     <name>fs.defaultFS</name>
@@ -34,7 +37,7 @@ cat > core-site.xml <<EOL
 </configuration>
 EOL
 
-cat > hdfs-site.xml <<EOL
+cat > $HADOOP_HOME/hdfs-site.xml <<EOL
 <configuration>
   <property>
     <name>dfs.replication</name>
@@ -43,7 +46,7 @@ cat > hdfs-site.xml <<EOL
 </configuration>
 EOL
 
-cat > mapred-site.xml <<EOL
+cat > $HADOOP_HOME/mapred-site.xml <<EOL
 <configuration>
   <property>
     <name>mapreduce.framework.name</name>
@@ -52,7 +55,7 @@ cat > mapred-site.xml <<EOL
 </configuration>
 EOL
 
-cat > yarn-site.xml <<EOL
+cat > $HADOOP_HOME/yarn-site.xml <<EOL
 <configuration>
   <property>
     <name>yarn.nodemanager.aux-services</name>
@@ -72,5 +75,3 @@ cat > yarn-site.xml <<EOL
   </property>
 </configuration>
 EOL
-
-source ~/.bashrc
