@@ -5,7 +5,6 @@ HADOOP_HOME=/usr/local/hadoop
 
 wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
 tar -xf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
-rm /tmp/hadoop-$HADOOP_VERSION.tar.gz
 
 sudo apt-get install openjdk-8-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")

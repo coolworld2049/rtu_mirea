@@ -8,7 +8,6 @@ sudo chown -R $USER:$USER $HIVE_HOME
 
 wget -nc https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
 tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
-rm /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz
 
 echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
 echo 'export PATH=$PATH:$HIVE_HOME/bin' >> ~/.bashrc
