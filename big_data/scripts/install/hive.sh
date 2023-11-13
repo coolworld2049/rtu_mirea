@@ -73,3 +73,8 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 </configuration>
 EOL"
 echo "Hive metastore configured successfully."
+
+sudo bash -c "cat > /etc/profile.d/hive.sh <<EOL
+HADOOP=$HADOOP_HOME/bin/hadoop
+export HADOOP
+EOL"

@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Define the Derby version
-DERBY_VERSION=10.15.2.0
+DERBY_VERSION=10.14.2.0
 
 # Define the installation directory
-DERBY_INSTALL_DIR=$HADOOP_HOME/derby
+DERBY_INSTALL_DIR=c
 
 # Check if Derby is already installed
 if [ -d "$DERBY_INSTALL_DIR" ]; then
