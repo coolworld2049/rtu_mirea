@@ -37,7 +37,4 @@ echo "export DERBY_HOME=$DERBY_INSTALL_DIR" >> ~/.bashrc
 echo "export PATH=\$PATH:\$DERBY_HOME/bin" >> ~/.bashrc
 source ~/.bashrc
 
-# Clean up temporary files
-rm -rf /tmp/db-derby-$DERBY_VERSION-bin*
-
 echo "Apache Derby $DERBY_VERSION has been installed to $DERBY_INSTALL_DIR."
