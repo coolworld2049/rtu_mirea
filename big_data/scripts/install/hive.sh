@@ -47,7 +47,7 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 
 <property>
   <name>hive.aux.jars.path</name>
-  <value>$DERBY_HOME/lib/derby.jar</value>
+  <value>$DERBY_HOME/lib/derbyclient.jar</value>
 </property>
 
 </configuration>
