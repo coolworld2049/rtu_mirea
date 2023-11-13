@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Define Hive version and installation directory
-HIVE_VERSION=2.3.6
+HIVE_VERSION=2.3.9
 HIVE_HOME=$HADOOP_OME/hive
 
 if [ -d "$HIVE_HOME" ]; then
