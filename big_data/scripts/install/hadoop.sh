@@ -2,7 +2,7 @@
 
 # Define Hadoop version and installation directory
 HADOOP_VERSION=2.10.2
-HADOOP_HOME=/usr/local/hadoop
+HADOOP_HOME=$HOME/hadoop
 
 if [ -d "$HADOOP_HOME" ]; then
   echo "Apache Hadoop is already installed in $HADOOP_HOME."
