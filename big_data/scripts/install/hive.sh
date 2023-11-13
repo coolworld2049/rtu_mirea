@@ -45,6 +45,11 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
   <value>org.apache.derby.jdbc.EmbeddedDriver</value>
 </property>
 
+<property>
+  <name>hive.aux.jars.path</name>
+  <value>$DERBY_HOME/lib/derby.jar</value>
+</property>
+
 </configuration>
 EOL"
 echo "Hive metastore configured successfully."
