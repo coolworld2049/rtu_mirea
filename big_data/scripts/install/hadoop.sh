@@ -2,7 +2,7 @@
 
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 
-HADOOP_VERSION=2.9.2
+HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/local/hadoop
 
 cd /tmp
