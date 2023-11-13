@@ -9,6 +9,7 @@ FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 TBLPROPERTIES ("skip.header.line.count" = "1");
 
+
 CREATE EXTERNAL TABLE IF NOT EXISTS orders
 (
     order_id   INT,
@@ -21,6 +22,7 @@ ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
 LINES TERMINATED BY '\n'
 TBLPROPERTIES ("skip.header.line.count" = "1");
+
 
 CREATE EXTERNAL TABLE IF NOT EXISTS customers
 (

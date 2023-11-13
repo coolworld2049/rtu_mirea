@@ -2,12 +2,13 @@
 
 # Define Hadoop version and installation directory
 HADOOP_VERSION=2.10.2
-HADOOP_HOME=/usr/local/hadoop
+HADOOP_HOME=$HOME/hadoop
 
 if [ -d "$HADOOP_HOME" ]; then
   echo "Apache Hadoop is already installed in $HADOOP_HOME."
 else
   sudo mkdir -p $HADOOP_HOME
+  sudo chown $USER:$USER -R $HADOOP_HOME
   echo "Downloading and installing Hadoop $HADOOP_VERSION..."
   sudo wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
   sudo tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
@@ -15,7 +16,7 @@ fi
 
 # Install OpenJDK 8
 echo "Installing OpenJDK 8..."
-sudo apt-get install openjdk-8-jdk
+sudo apt-get install -y openjdk-8-jdk
 echo "OpenJDK 8 installed successfully."
 
 # Set up Java environment variables
@@ -28,7 +29,7 @@ echo "Java environment variables set up successfully."
 # Set up Hadoop environment variables
 echo "Setting up Hadoop environment variables..."
 echo "HADOOP_HOME=$HADOOP_HOME" >> ~/.bashrc
-echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin\$HADOOP_HOME/sbin:" >> ~/.bashrc
+echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin:" >> ~/.bashrc
 echo "export JAVA_HOME" >> ~/.bashrc
 echo "export HADOOP_HOME" >> ~/.bashrc
 echo "export PATH" >> ~/.bashrc
