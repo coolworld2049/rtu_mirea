@@ -33,16 +33,16 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 
 <property>
   <name>hive.metastore.warehouse.dir</name>
-  <value>$HOME/warehouse</value>
+  <value>/user/$(whoami)/warehouse</value>
   <description>location of default database for the warehouse</description>
 </property>
 
 <property>
-  <name>hadoop.proxyuser.$USER.groups</name>
+  <name>hadoop.proxyuser.$(whoami).groups</name>
   <value>*</value>
 </property>
 <property>
-  <name>hadoop.proxyuser.$USER.hosts</name>
+  <name>hadoop.proxyuser.$(whoami).hosts</name>
   <value>*</value>
 </property>
 
