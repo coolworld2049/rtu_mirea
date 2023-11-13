@@ -37,37 +37,12 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 
 <property>
   <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:derby:$HOME/metastore_db;create=true</value>
+  <value>jdbc:derby://127.0.0.1:49999/metastore_db;create=true</value>
 </property>
 
 <property>
   <name>javax.jdo.option.ConnectionDriverName</name>
   <value>org.apache.derby.jdbc.EmbeddedDriver</value>
-</property>
-
-<property>
-  <name>javax.jdo.option.ConnectionUserName</name>
-  <value>username</value>
-</property>
-
-<property>
-  <name>javax.jdo.option.ConnectionPassword</name>
-  <value>password</value>
-</property>
-
-<property>
-  <name>datanucleus.autoCreateSchema</name>
-  <value>true</value>
-</property>
-
-<property>
-  <name>datanucleus.fixedDatastore</name>
-  <value>true</value>
-</property>
-
-<property>
-  <name>datanucleus.autoCreateTables</name>
-  <value>true</value>
 </property>
 
 </configuration>
