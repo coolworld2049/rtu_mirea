@@ -5,6 +5,6 @@ set -eou pipefail
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit
 
-bash exec_hive.sh -f hive/ddl.hql
-bash exec_hive.sh -f hive/dml.hql
-bash exec_hive.sh -f hive/dql.hql
+bash ~/rtu_mirea/big_data/scripts/hive/exec.sh -f "$PWD"/hive/ddl.hql
+bash ~/rtu_mirea/big_data/scripts/hive/exec.sh -f "$PWD"/hive/dml.hql
+bash ~/rtu_mirea/big_data/scripts/hive/exec.sh -f "$PWD"/hive/dql.hql
