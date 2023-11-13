@@ -1,7 +1,7 @@
 #!/bin/bash
 
 HIVE_VERSION=3.1.2
-HIVE_HOME=/usr/lib/hive
+HIVE_HOME=/opt/hive
 
 sudo mkdir -p $HIVE_HOME
 sudo chown -R $USER:$USER $HIVE_HOME
@@ -16,26 +16,38 @@ source ~/.bashrc
 sudo mkdir -p /etc/hive/conf
 sudo cp $HIVE_HOME/conf/*.xml /etc/hive/conf
 
+hdfs dfs -mkdir /user/$USER/warehouse
+hdfs dfs -chmod g+w /user/$USER/warehouse
+
+bash derby.sh
+
+sudo mkdir ~/metastore
 sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 <configuration>
+
+<property>
+  <name>hive.metastore.local</name>
+  <value>true</value>
+</property>
+
 <property>
   <name>javax.jdo.option.ConnectionURL</name>
-  <value>jdbc:mysql://localhost/metastore?createDatabaseIfNotExist=true</value>
+  <value>jdbc:derby:$HOME/metastore_db;create=true</value>
 </property>
 
 <property>
   <name>javax.jdo.option.ConnectionDriverName</name>
-  <value>com.mysql.jdbc.Driver</value>
+  <value>org.apache.derby.jdbc.EmbeddedDriver</value>
 </property>
 
 <property>
   <name>javax.jdo.option.ConnectionUserName</name>
-  <value>root</value>
+  <value>username</value>
 </property>
 
 <property>
   <name>javax.jdo.option.ConnectionPassword</name>
-  <value>root</value>
+  <value>password</value>
 </property>
 
 <property>
@@ -50,8 +62,10 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 
 <property>
   <name>datanucleus.autoCreateTables</name>
-  <value>True</value>
-  </property>
+  <value>true</value>
+</property>
 
 </configuration>
 EOL"
+
+schematool -dbType derby -info
