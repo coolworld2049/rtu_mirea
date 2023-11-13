@@ -28,7 +28,7 @@ ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 chmod 0600 ~/.ssh/authorized_keys
 
-cat > $HADOOP_HOME/core-site.xml <<EOL
+cat > $HADOOP_HOME/etc/hadoop/core-site.xml <<EOL
 <configuration>
   <property>
     <name>fs.defaultFS</name>
@@ -37,7 +37,7 @@ cat > $HADOOP_HOME/core-site.xml <<EOL
 </configuration>
 EOL
 
-cat > $HADOOP_HOME/hdfs-site.xml <<EOL
+cat > $HADOOP_HOME/etc/hadoop/hdfs-site.xml <<EOL
 <configuration>
   <property>
     <name>dfs.replication</name>
@@ -46,7 +46,7 @@ cat > $HADOOP_HOME/hdfs-site.xml <<EOL
 </configuration>
 EOL
 
-cat > $HADOOP_HOME/mapred-site.xml <<EOL
+cat > $HADOOP_HOME/etc/hadoop/mapred-site.xml <<EOL
 <configuration>
   <property>
     <name>mapreduce.framework.name</name>
@@ -55,7 +55,7 @@ cat > $HADOOP_HOME/mapred-site.xml <<EOL
 </configuration>
 EOL
 
-cat > $HADOOP_HOME/yarn-site.xml <<EOL
+cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
 <configuration>
   <property>
     <name>yarn.nodemanager.aux-services</name>
