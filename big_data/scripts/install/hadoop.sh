@@ -1,16 +1,11 @@
 #!/bin/bash
 
-SCRIPTDIR=$(dirname "$(readlink -f "$0")")
-
 HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/local/hadoop
 
-cd /tmp
-wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
-tar -xzf hadoop-$HADOOP_VERSION.tar.gz
-mv hadoop-$HADOOP_VERSION $HADOOP_HOME
-rm -r hadoop-$HADOOP_VERSION.tar.gz
-cd $SCRIPTDIR
+wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
+tar -xf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
+rm /tmp/hadoop-$HADOOP_VERSION.tar.gz
 
 sudo apt-get install openjdk-8-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
@@ -27,6 +22,7 @@ chmod 700 ~/.ssh
 ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 chmod 0600 ~/.ssh/authorized_keys
+source ~/.bashrc
 
 cat > $HADOOP_HOME/etc/hadoop/core-site.xml <<EOL
 <configuration>
@@ -75,5 +71,3 @@ cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
   </property>
 </configuration>
 EOL
-
-echo "exec: source ~/.bashrc"
