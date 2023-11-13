@@ -15,7 +15,6 @@ else
 fi
 
 echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
-echo 'export CLASSPATH=$CLASSPATH:$HIVE_HOME/lib/*:' >> ~/.bashrc
 echo 'export PATH=$PATH:$HIVE_HOME/bin:' >> ~/.bashrc
 source ~/.bashrc
 
@@ -50,12 +49,12 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
 
 <property>
   <name>hive.server2.enable.doAs</name>
-  <value>true</value>
+  <value>false</value>
 </property>
 
 </configuration>
 EOL"
-echo "Hive metastore configured successfully."
+echo "Hive hive-site.xml configured successfully."
 
 sudo bash -c "cat > /etc/profile.d/hive.sh <<EOL
 HADOOP=$HADOOP_HOME/bin/hadoop
