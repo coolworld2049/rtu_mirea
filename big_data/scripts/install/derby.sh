@@ -11,8 +11,7 @@ sudo mkdir -p $DERBY_INSTALL_DIR
 
 # Check if Derby is already installed
 if [ -d "$DERBY_INSTALL_DIR" ]; then
-  echo "Apache Derby is already installed in $DERBY_INSTALL_DIR. "
-  exit 0
+  echo "Apache Derby is already installed in $DERBY_INSTALL_DIR."
 else
   echo "Downloading Apache Derby..."
   sudo wget -P /tmp https://downloads.apache.org/db/derby/db-derby-$DERBY_VERSION/db-derby-$DERBY_VERSION-bin.tar.gz
