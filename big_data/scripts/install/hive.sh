@@ -2,7 +2,7 @@
 
 # Define Hive version and installation directory
 HIVE_VERSION=2.3.9
-HIVE_HOME=$HADOOP_OME/hive
+HIVE_HOME=$HADOOP_HOME/hive
 
 if [ -d "$HIVE_HOME" ]; then
   echo "Apache Hive is already installed in $HIVE_HOME."
