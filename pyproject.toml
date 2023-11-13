@@ -2,19 +2,27 @@
 name = "rtu-mirea"
 version = "0.1.0"
 description = ""
-authors = ["coolworld2049 <coolworld2049@gmail.com>"]
+authors = []
 readme = "README.md"
-packages = [{include = "rtu_mirea"}]
+packages = []
 
 [tool.poetry.dependencies]
 python = "^3.11"
 requests = "^2.31.0"
 loguru = "^0.7.2"
+mimesis = "^11.1.0"
+pyhdfs = "^0.3.1"
+faker = "^20.0.0"
+pyhive = "^0.7.0"
 
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.10.1"
 pytest = "^7.4.3"
+
+
+[tool.poetry.group.big_data.dependencies]
+mrjob = "^0.7.4"
 
 [build-system]
 requires = ["poetry-core"]
