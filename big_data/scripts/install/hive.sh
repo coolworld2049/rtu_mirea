@@ -41,9 +41,15 @@ sudo bash -c "cat > $HIVE_HOME/conf/hive-site.xml <<EOL
   <name>hadoop.proxyuser.$(whoami).groups</name>
   <value>*</value>
 </property>
+
 <property>
   <name>hadoop.proxyuser.$(whoami).hosts</name>
   <value>*</value>
+</property>
+
+<property>
+  <name>hive.server2.enable.doAs</name>
+  <value>true</value>
 </property>
 
 </configuration>
