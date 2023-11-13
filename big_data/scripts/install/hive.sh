@@ -8,6 +8,7 @@ if [ -d "$HIVE_HOME" ]; then
   echo "Apache Hive is already installed in $HIVE_HOME."
 else
   sudo mkdir -p $HIVE_HOME
+  sudo chown $USER:$USER -R $HIVE_HOME
   echo "Downloading and installing Hive $HIVE_VERSION..."
   sudo wget -nc https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
   sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
