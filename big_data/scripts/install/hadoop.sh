@@ -2,7 +2,7 @@
 
 # Define Hadoop version and installation directory
 HADOOP_VERSION=2.10.2
-HADOOP_HOME=/usr/lib/hadoop
+HADOOP_HOME=/usr/local/hadoop
 
 sudo mkdir -p $HADOOP_HOME
 
