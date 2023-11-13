@@ -3,5 +3,7 @@
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit
 
-hdfs dfs -rm -r 'pr3_map_reduce_etl/output';
+. copy_to_hdfs.sh
+
+hdfs dfs -rm -r 'warehouse/output';
 pig -f pig/process_data.pig
