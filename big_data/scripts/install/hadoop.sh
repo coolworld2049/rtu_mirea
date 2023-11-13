@@ -6,7 +6,7 @@ HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/local/hadoop
 
 cd /tmp
-wget http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
+wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz
 tar -xzf hadoop-$HADOOP_VERSION.tar.gz
 mv hadoop-$HADOOP_VERSION $HADOOP_HOME
 cd $SCRIPTDIR
