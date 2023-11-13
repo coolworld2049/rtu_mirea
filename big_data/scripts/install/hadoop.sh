@@ -6,6 +6,11 @@ HADOOP_HOME=/usr/local/hadoop
 
 sudo mkdir -p $HADOOP_HOME
 
+if [ -d "$HADOOP_HOME" ]; then
+  echo "Apache Hadoop is already installed in $HADOOP_HOME. Exiting."
+  exit 0
+fi
+
 echo "Downloading and installing Hadoop $HADOOP_VERSION..."
 
 # Download and extract Hadoop

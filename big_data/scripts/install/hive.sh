@@ -6,6 +6,11 @@ HIVE_HOME=$HADOOP_HOME/hive
 
 sudo mkdir -p $HIVE_HOME
 
+if [ -d "$HIVE_HOME" ]; then
+  echo "Apache Hive is already installed in $HIVE_HOME. Exiting."
+  exit 0
+fi
+
 echo "Downloading and installing Hive $HIVE_VERSION..."
 
 # Download and extract Hive
