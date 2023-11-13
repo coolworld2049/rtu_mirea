@@ -4,11 +4,13 @@
 HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/lib/hadoop
 
+sudo mkdir -p $HADOOP_HOME
+
 echo "Downloading and installing Hadoop $HADOOP_VERSION..."
 
 # Download and extract Hadoop
-wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
-tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
+sudo wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
+sudo tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
 
 echo "Hadoop downloaded and extracted successfully."
 

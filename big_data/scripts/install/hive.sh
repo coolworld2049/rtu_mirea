@@ -7,8 +7,8 @@ HIVE_HOME=$HADOOP_HOME/hive
 echo "Downloading and installing Hive $HIVE_VERSION..."
 
 # Download and extract Hive
-wget https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
-tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
+sudo wget https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
+sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
 
 echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
 echo 'export PATH=$PATH:$HIVE_HOME/bin' >> ~/.bashrc

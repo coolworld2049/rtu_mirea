@@ -17,7 +17,7 @@ sudo mkdir -p $DERBY_INSTALL_DIR
 
 # Download Apache Derby
 echo "Downloading Apache Derby..."
-wget -P /tmp https://downloads.apache.org/db/derby/db-derby-$DERBY_VERSION/db-derby-$DERBY_VERSION-bin.tar.gz
+sudo wget -P /tmp https://downloads.apache.org/db/derby/db-derby-$DERBY_VERSION/db-derby-$DERBY_VERSION-bin.tar.gz
 
 # Check if the download was successful
 if [ $? -ne 0 ]; then
@@ -27,7 +27,7 @@ fi
 
 # Extract the downloaded archive
 echo "Extracting Apache Derby..."
-tar -xf /tmp/db-derby-$DERBY_VERSION-bin.tar.gz -C /tmp
+sudo tar -xf /tmp/db-derby-$DERBY_VERSION-bin.tar.gz -C /tmp
 
 # Move Derby files to the installation directory
 sudo mv /tmp/db-derby-$DERBY_VERSION-bin/* $DERBY_INSTALL_DIR
