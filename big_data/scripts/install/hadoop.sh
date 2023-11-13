@@ -14,10 +14,6 @@ cd $SCRIPTDIR
 sudo apt install default-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
 echo "JAVA_HOME=$JAVA_HOME" >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-echo HADOOP_OPTS="${HADOOP_OPTS} --add-opens=java.base/sun.security.krb5=ALL-UNNAMED --illegal-access=permit"  \
-  >> $HADOOP_HOME/etc/hadoop/hadoop-env.sh
-
-
 echo "JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
 echo "HADOOP_HOME=$HADOOP_HOME" >> ~/.bashrc
 echo "PATH=\$PATH:"$JAVA_HOME"bin:$HADOOP_HOME/bin" >> ~/.bashrc
