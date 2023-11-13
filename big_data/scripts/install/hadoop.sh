@@ -3,8 +3,11 @@
 HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/local/hadoop
 
+sudo mkdir -p $HADOOP_HOME
+sudo chown -R $USER:$USER $HADOOP_HOME
+
 wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
-tar -xf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME --strip-components=1
+tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C $HADOOP_HOME
 
 sudo apt-get install openjdk-8-jdk
 JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:bin/java::")
@@ -16,41 +19,40 @@ echo "export JAVA_HOME" >> ~/.bashrc
 echo "export HADOOP_HOME" >> ~/.bashrc
 echo "export PATH" >> ~/.bashrc
 
-mkdir ~/.ssh
-chmod 700 ~/.ssh
+sudo mkdir -p ~/.ssh
+sudo chmod 700 ~/.ssh
 ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
-chmod 0600 ~/.ssh/authorized_keys
-source ~/.bashrc
+cat ~/.ssh/id_rsa.pub | sudo tee -a ~/.ssh/authorized_keys
+sudo chmod 0600 ~/.ssh/authorized_keys
 
-cat > $HADOOP_HOME/etc/hadoop/core-site.xml <<EOL
+sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/core-site.xml <<EOL
 <configuration>
   <property>
     <name>fs.defaultFS</name>
     <value>hdfs://localhost:9000</value>
   </property>
 </configuration>
-EOL
+EOL"
 
-cat > $HADOOP_HOME/etc/hadoop/hdfs-site.xml <<EOL
+sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/hdfs-site.xml <<EOL
 <configuration>
   <property>
     <name>dfs.replication</name>
     <value>1</value>
   </property>
 </configuration>
-EOL
+EOL"
 
-cat > $HADOOP_HOME/etc/hadoop/mapred-site.xml <<EOL
+sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/mapred-site.xml <<EOL
 <configuration>
   <property>
     <name>mapreduce.framework.name</name>
     <value>yarn</value>
   </property>
 </configuration>
-EOL
+EOL"
 
-cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
+sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
 <configuration>
   <property>
     <name>yarn.nodemanager.aux-services</name>
@@ -69,4 +71,4 @@ cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
     <value>127.0.0.1:8031</value>
   </property>
 </configuration>
-EOL
+EOL"
