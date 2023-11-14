@@ -4,20 +4,22 @@
 HIVE_VERSION=2.3.9
 HIVE_HOME=$HADOOP_HOME/hive
 
+sudo mkdir -p "$HIVE_HOME"
+sudo chown "$(whoami)":"$(whoami)" -R "$HIVE_HOME"
+
 if [ -d /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz ]; then
   echo "Apache Hive is already installed in $HIVE_HOME."
 else
-  sudo mkdir -p $HIVE_HOME
-  sudo chown $USER:$USER -R $HIVE_HOME
   echo "Downloading and installing Hive $HIVE_VERSION..."
   sudo wget -nc https://downloads.apache.org/hive/hive-${HIVE_VERSION}/apache-hive-${HIVE_VERSION}-bin.tar.gz -P /tmp
-  sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C $HIVE_HOME --strip-components=1
 fi
 
-echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
-echo "export PATH=\$PATH:\$HIVE_HOME/bin:" >> ~/.bashrc
-source $HOME/.bashrc
+sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C "$HIVE_HOME" --strip-components=1
 
+echo "HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
+echo "PATH=\$PATH:\$HIVE_HOME/bin:" >> ~/.bashrc
+echo "export HIVE_HOME" >> ~/.bashrc
+echo "export PATH" >> ~/.bashrc
 echo "Hive downloaded and installed successfully."
 
 # Copy Hive configuration files to /etc/hive/conf
