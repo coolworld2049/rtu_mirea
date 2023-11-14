@@ -4,7 +4,7 @@
 HADOOP_VERSION=2.10.2
 HADOOP_HOME=/usr/local/hadoop
 
-sudo mkdir -p "$HADOOP_HOME"
+sudo mkdir "$HADOOP_HOME"
 sudo chown "$(whoami)":"$(whoami)" -R "$HADOOP_HOME"
 
 if [ -d /tmp/hadoop-$HADOOP_VERSION.tar.gz ]; then
@@ -14,7 +14,7 @@ else
   sudo wget -nc http://mirror.linux-ia64.org/apache/hadoop/common/hadoop-$HADOOP_VERSION/hadoop-$HADOOP_VERSION.tar.gz -P /tmp
 fi
 
-[ -d "$HADOOP_HOME" ] || sudo tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C "$HADOOP_HOME" --strip-components=1
+sudo tar -xzf /tmp/hadoop-$HADOOP_VERSION.tar.gz -C "$HADOOP_HOME" --strip-components=1
 
 # Install OpenJDK 8
 echo "Installing OpenJDK 8..."
@@ -29,12 +29,14 @@ echo "Java environment variables set up successfully."
 
 # Set up Hadoop environment variables
 echo "Setting up Hadoop environment variables..."
-echo "JAVA_HOME=$JAVA_HOME" >> ~/.bashrc
-echo "HADOOP_HOME=$HADOOP_HOME" >> ~/.bashrc
-echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin:" >> ~/.bashrc
-echo "export JAVA_HOME" >> ~/.bashrc
-echo "export HADOOP_HOME" >> ~/.bashrc
-echo "export PATH" >> ~/.bashrc
+{
+  echo "JAVA_HOME=$JAVA_HOME"
+  echo "HADOOP_HOME=$HADOOP_HOME"
+  echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin:"
+  echo "export JAVA_HOME"
+  echo "export HADOOP_HOME"
+  echo "export PATH"
+} >> ~/.bashrc
 echo "Hadoop environment variables set up successfully."
 
 # Set up SSH and generate keys

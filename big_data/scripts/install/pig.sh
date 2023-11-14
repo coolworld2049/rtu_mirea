@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 PIG_VERSION=0.17.0
-PIG_HOME=$HADOOP_HOME/pig
+PIG_HOME=/usr/local/pig
 
-sudo mkdir -p "$PIG_HOME"
+sudo mkdir "$PIG_HOME"
 sudo chown "$(whoami)":"$(whoami)" -R "$PIG_HOME"
 
 # Download and extract Pig
