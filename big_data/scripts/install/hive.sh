@@ -4,7 +4,7 @@
 HIVE_VERSION=2.3.9
 HIVE_HOME=$HADOOP_HOME/hive
 
-if [ -d "$HIVE_HOME" ]; then
+if [ -d /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz ]; then
   echo "Apache Hive is already installed in $HIVE_HOME."
 else
   sudo mkdir -p $HIVE_HOME
@@ -15,8 +15,8 @@ else
 fi
 
 echo "export HIVE_HOME=$HIVE_HOME" >> ~/.bashrc
-echo 'export PATH=$PATH:$HIVE_HOME/bin:' >> ~/.bashrc
-source ~/.bashrc
+echo "export PATH=\$PATH:\$HIVE_HOME/bin:" >> ~/.bashrc
+source $HOME/.bashrc
 
 echo "Hive downloaded and installed successfully."
 
