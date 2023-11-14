@@ -6,4 +6,4 @@ cd "$SCRIPTDIR" || exit
 . copy_to_hdfs.sh
 
 hdfs dfs -rm -r 'warehouse/output';
-pig -f pig/process_data.pig
+pig -f pig/queries.pig
