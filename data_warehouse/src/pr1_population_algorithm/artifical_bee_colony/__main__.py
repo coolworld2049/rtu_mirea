@@ -1,10 +1,8 @@
 import random
-import plotly.graph_objects as go
+
+import matplotlib.pyplot as plt
 from loguru import logger
-
-
-def sphere_function(x):
-    return sum([val**2 for val in x])
+from matplotlib.animation import FuncAnimation
 
 
 class Bee:
@@ -32,25 +30,34 @@ class ABCAlgorithm:
         self.employed_bees = [Bee(num_dimensions) for _ in range(num_employed)]
         self.best_solution = min(self.employed_bees, key=lambda bee: bee.fitness)
 
-        # Lists for storing fitness values for visualization
         self.fitness_values = []
         self.best_fitness_values = []
 
     def run_algorithm(self):
+        employed_bees_positions = []
+
         for iteration in range(self.max_iterations):
             self.employed_bees_phase()
+            employed_bees_positions.append([bee.position for bee in self.employed_bees])
             self.calculate_probabilities()
             self.onlooker_bees_phase()
             self.scout_bees_phase()
 
-            self.fitness_values.append(self.best_solution.fitness)
-            self.best_fitness_values.append(self.best_solution.fitness)
+            self.fitness_values.append([bee.fitness for bee in self.employed_bees])
+            self.best_fitness_values.append(
+                (self.best_solution.position, self.best_solution.fitness)
+            )
 
             logger.info(
                 f"Iteration {iteration}: Best Fitness = {self.best_solution.fitness}"
             )
 
-        return self.best_solution, self.fitness_values, self.best_fitness_values
+        return (
+            self.best_solution,
+            self.fitness_values,
+            self.best_fitness_values,
+            employed_bees_positions,
+        )
 
     def employed_bees_phase(self):
         for bee in self.employed_bees:
@@ -97,45 +104,68 @@ class ABCAlgorithm:
                 self.best_solution = bee
 
 
-def plot_fitness_progression_plotly(iterations, fitness_values, best_fitness_values):
-    # Plot fitness values over iterations using plotly
-    fig = go.Figure()
+def sphere_function(x):
+    return sum([val**2 for val in x])
 
-    fig.add_trace(
-        go.Scatter(
-            x=iterations,
-            y=fitness_values,
-            mode="lines",
-            name="Fitness of Employed Bees",
+
+def plot_fitness_progression_matplotlib(
+    iterations, fitness_values, best_fitness_values, employed_bees_positions
+):
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection="3d")
+
+    def update_plot(iteration):
+        ax.clear()
+        ax.set_title(f"Iteration {iteration}")
+        ax.set_xlabel("X")
+        ax.set_ylabel("Y")
+        ax.set_zlabel("Fitness")
+
+        for i, positions in enumerate(employed_bees_positions[iteration]):
+            ax.scatter(
+                positions[0],
+                positions[1],
+                fitness_values[iteration][i],
+                c="b",
+                marker="o",
+                label=f"Employed Bee {i + 1}",
+            )
+
+        best_position = best_fitness_values[iteration][0]
+        best_fitness = best_fitness_values[iteration][1]
+        ax.scatter(
+            best_position[0],
+            best_position[1],
+            best_fitness,
+            c="r",
+            marker="o",
+            s=40,
+            label="Best Solution",
         )
-    )
-    fig.add_trace(
-        go.Scatter(
-            x=iterations, y=best_fitness_values, mode="lines", name="Best Fitness"
-        )
-    )
 
-    fig.update_layout(
-        title="ABC Algorithm - Fitness Progression",
-        xaxis_title="Iteration",
-        yaxis_title="Fitness",
-        legend=dict(x=0, y=1),
-        template="plotly_dark",
-    )
+        return (ax,)
 
-    fig.show()
+    ani = FuncAnimation(fig, update_plot, frames=iterations, repeat=False)
+    plt.show()
 
 
 if __name__ == "__main__":
     num_employed = 40
     num_onlookers = 10
-    max_iterations = 30
+    max_iterations = 20
 
     abc_algorithm = ABCAlgorithm(num_employed, num_onlookers, max_iterations)
-    best_solution, fitness_values, best_fitness_values = abc_algorithm.run_algorithm()
+    (
+        best_solution,
+        fitness_values,
+        best_fitness_values,
+        employed_bees_positions,
+    ) = abc_algorithm.run_algorithm()
     logger.info(
         f"Best solution found at position {best_solution.position} with fitness {best_solution.fitness}"
     )
 
     iterations = list(range(max_iterations))
-    plot_fitness_progression_plotly(iterations, fitness_values, best_fitness_values)
+    plot_fitness_progression_matplotlib(
+        iterations, fitness_values, best_fitness_values, employed_bees_positions
+    )
