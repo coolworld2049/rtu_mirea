@@ -15,8 +15,3 @@ SELECT p.product_name, p.product_price, SUM(o.quantity) as total_quantity
 FROM orders o
 JOIN products p ON o.product_id = p.product_id
 GROUP BY p.product_name, p.product_price;
-
--- 6
-SELECT * FROM orders
-JOIN customers ON orders.customer_id = customers.customer_id
-WHERE customers.customer_name = 'Mia Johnson';
