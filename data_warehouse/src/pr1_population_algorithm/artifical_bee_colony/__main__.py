@@ -1,111 +1,141 @@
 import random
-import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 from loguru import logger
 
 
-# Objective function to be optimized
-def objective_function(x):
+def sphere_function(x):
     return sum([val**2 for val in x])
 
 
-# Class representing a bee
 class Bee:
     def __init__(self, num_dimensions):
+        self.num_dimensions = num_dimensions
         self.position = [random.uniform(-5, 5) for _ in range(num_dimensions)]
-        self.fitness = objective_function(self.position)
+        self.fitness = sphere_function(self.position)
 
     def update(self, new_position, new_fitness):
         self.position = new_position
         self.fitness = new_fitness
 
+    def generate_random_position(self):
+        return [random.uniform(-5, 5) for _ in range(self.num_dimensions)]
 
-# Artificial Bee Colony algorithm
-def artificial_bee_colony(num_employed, num_onlookers, max_iterations):
-    num_dimensions = 2
-    employed_bees = [Bee(num_dimensions) for _ in range(num_employed)]
-    best_solution = min(employed_bees, key=lambda bee: bee.fitness)
 
-    # Lists for storing fitness values for visualization
-    fitness_values = []
-    best_fitness_values = []
+class ABCAlgorithm:
+    def __init__(self, num_employed, num_onlookers, max_iterations, num_dimensions=2):
+        self.probabilities = None
+        self.num_employed = num_employed
+        self.num_onlookers = num_onlookers
+        self.max_iterations = max_iterations
+        self.num_dimensions = num_dimensions
 
-    for iteration in range(max_iterations):
-        # Employed bees phase
-        for bee in employed_bees:
-            neighbor_bee = random.choice(employed_bees)
+        self.employed_bees = [Bee(num_dimensions) for _ in range(num_employed)]
+        self.best_solution = min(self.employed_bees, key=lambda bee: bee.fitness)
+
+        # Lists for storing fitness values for visualization
+        self.fitness_values = []
+        self.best_fitness_values = []
+
+    def run_algorithm(self):
+        for iteration in range(self.max_iterations):
+            self.employed_bees_phase()
+            self.calculate_probabilities()
+            self.onlooker_bees_phase()
+            self.scout_bees_phase()
+
+            self.fitness_values.append(self.best_solution.fitness)
+            self.best_fitness_values.append(self.best_solution.fitness)
+
+            logger.info(
+                f"Iteration {iteration}: Best Fitness = {self.best_solution.fitness}"
+            )
+
+        return self.best_solution, self.fitness_values, self.best_fitness_values
+
+    def employed_bees_phase(self):
+        for bee in self.employed_bees:
+            neighbor_bee = random.choice(self.employed_bees)
             while neighbor_bee is bee:
-                neighbor_bee = random.choice(employed_bees)
+                neighbor_bee = random.choice(self.employed_bees)
 
             new_position = [
                 bee.position[i]
                 + random.uniform(-1, 1) * (bee.position[i] - neighbor_bee.position[i])
-                for i in range(num_dimensions)
+                for i in range(self.num_dimensions)
             ]
-            new_fitness = objective_function(new_position)
+            new_fitness = sphere_function(new_position)
 
             if new_fitness < bee.fitness:
                 bee.update(new_position, new_fitness)
 
-        # Calculate the probabilities for onlooker bees
-        total_fitness = sum(bee.fitness for bee in employed_bees)
-        probabilities = [bee.fitness / total_fitness for bee in employed_bees]
+    def calculate_probabilities(self):
+        total_fitness = sum(bee.fitness for bee in self.employed_bees)
+        self.probabilities = [bee.fitness / total_fitness for bee in self.employed_bees]
 
-        # Onlooker bees phase
-        for i in range(num_onlookers):
-            selected_bee = random.choices(employed_bees, probabilities)[0]
+    def onlooker_bees_phase(self):
+        for _ in range(self.num_onlookers):
+            selected_bee = random.choices(self.employed_bees, self.probabilities)[0]
 
-            neighbor_bee = random.choice(employed_bees)
+            neighbor_bee = random.choice(self.employed_bees)
             while neighbor_bee is selected_bee:
-                neighbor_bee = random.choice(employed_bees)
+                neighbor_bee = random.choice(self.employed_bees)
 
             new_position = [
                 selected_bee.position[i]
                 + random.uniform(-1, 1)
                 * (selected_bee.position[i] - neighbor_bee.position[i])
-                for i in range(num_dimensions)
+                for i in range(self.num_dimensions)
             ]
-            new_fitness = objective_function(new_position)
+            new_fitness = sphere_function(new_position)
 
             if new_fitness < selected_bee.fitness:
                 selected_bee.update(new_position, new_fitness)
 
-        # Scout bees phase
-        for bee in employed_bees:
-            if bee.fitness > best_solution.fitness:
-                best_solution = bee
+    def scout_bees_phase(self):
+        for bee in self.employed_bees:
+            if bee.fitness > self.best_solution.fitness:
+                self.best_solution = bee
 
-        fitness_values.append(best_solution.fitness)
-        best_fitness_values.append(best_solution.fitness)
 
-        logger.info(f"Iteration {iteration}: Best Fitness = {best_solution.fitness}")
+def plot_fitness_progression_plotly(iterations, fitness_values, best_fitness_values):
+    # Plot fitness values over iterations using plotly
+    fig = go.Figure()
 
-    return best_solution, fitness_values, best_fitness_values
+    fig.add_trace(
+        go.Scatter(
+            x=iterations,
+            y=fitness_values,
+            mode="lines",
+            name="Fitness of Employed Bees",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=iterations, y=best_fitness_values, mode="lines", name="Best Fitness"
+        )
+    )
+
+    fig.update_layout(
+        title="ABC Algorithm - Fitness Progression",
+        xaxis_title="Iteration",
+        yaxis_title="Fitness",
+        legend=dict(x=0, y=1),
+        template="plotly_dark",
+    )
+
+    fig.show()
 
 
 if __name__ == "__main__":
-    num_employed = 20
+    num_employed = 40
     num_onlookers = 10
-    max_iterations = 100
+    max_iterations = 30
 
-    best_solution, fitness_values, best_fitness_values = artificial_bee_colony(
-        num_employed, num_onlookers, max_iterations
-    )
+    abc_algorithm = ABCAlgorithm(num_employed, num_onlookers, max_iterations)
+    best_solution, fitness_values, best_fitness_values = abc_algorithm.run_algorithm()
     logger.info(
         f"Best solution found at position {best_solution.position} with fitness {best_solution.fitness}"
     )
 
-    # Extracting data for visualization
     iterations = list(range(max_iterations))
-
-    # Plot fitness values over iterations
-    plt.figure(figsize=(10, 6))
-    plt.plot(iterations, fitness_values, label="Fitness of Employed Bees")
-    plt.plot(iterations, best_fitness_values, linestyle="--", label="Best Fitness")
-    plt.xlabel("Iteration")
-    plt.ylabel("Fitness")
-    plt.legend()
-    plt.title("ABC Algorithm - Fitness Progression")
-    plt.grid(True)
-
-    # Show the plot
-    plt.show()
+    plot_fitness_progression_plotly(iterations, fitness_values, best_fitness_values)
