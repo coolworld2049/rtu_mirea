@@ -1,7 +1,9 @@
 import random
-
 import networkx as nx
 from loguru import logger
+from matplotlib import pyplot as plt
+
+random.seed(42)
 
 
 class DistanceCalculator:
@@ -9,11 +11,13 @@ class DistanceCalculator:
         self.graph = graph
 
     def calculate_distance(self, route):
-        distance = 0
-        for i in range(len(route) - 1):
-            distance += self.graph.edges[route[i], route[i + 1]]["weight"]
-        distance += self.graph.edges[route[-1], route[0]]["weight"]
-        return distance
+        return (
+            sum(
+                self.graph.edges[route[i], route[i + 1]]["weight"]
+                for i in range(len(route) - 1)
+            )
+            + self.graph.edges[route[-1], route[0]]["weight"]
+        )
 
 
 class RouteInitializer:
@@ -39,7 +43,7 @@ class ParentSelector:
 class CrossoverOperator:
     def crossover(self, parent1, parent2):
         size = len(parent1)
-        start, end = sorted([random.randint(0, size - 1) for _ in range(2)])
+        start, end = sorted(random.sample(range(size), 2))
         temp = parent1[start:end] + [
             city for city in parent2 if city not in parent1[start:end]
         ]
@@ -73,25 +77,32 @@ class GeneticAlgorithm:
             self.population_initializer.initialize_route() for _ in range(pop_size)
         ]
 
-        for gen in range(generations):
+        for _ in range(generations):
             new_population = []
 
             for _ in range(pop_size // 2):
                 parent1 = self.parent_selector.select_parents(population)
                 parent2 = self.parent_selector.select_parents(population)
 
-                if random.random() < crossover_prob:
-                    child1 = self.crossover_operator.crossover(parent1, parent2)
-                    child2 = self.crossover_operator.crossover(parent2, parent1)
-                else:
-                    child1, child2 = parent1[:], parent2[:]
+                child1 = (
+                    self.crossover_operator.crossover(parent1, parent2)
+                    if random.random() < crossover_prob
+                    else parent1[:]
+                )
+                child2 = (
+                    self.crossover_operator.crossover(parent2, parent1)
+                    if random.random() < crossover_prob
+                    else parent2[:]
+                )
 
-                if random.random() < mutation_prob:
-                    child1 = self.mutation_operator.mutate(child1)
-                if random.random() < mutation_prob:
-                    child2 = self.mutation_operator.mutate(child2)
-
-                new_population.extend([child1, child2])
+                new_population.extend(
+                    [
+                        self.mutation_operator.mutate(child)
+                        if random.random() < mutation_prob
+                        else child[:]
+                        for child in [child1, child2]
+                    ]
+                )
 
             population = new_population
 
@@ -129,3 +140,24 @@ best_route = genetic_algorithm.run(
 
 logger.info(f"Best Route: {best_route}")
 logger.info(f"Total Distance: {distance_calculator.calculate_distance(best_route)}")
+
+
+def visualize_best_route(graph, best_route):
+    pos = nx.spring_layout(graph)
+    nx.draw(graph, pos, with_labels=True)
+
+    best_route_edges = [
+        (best_route[i], best_route[i + 1]) for i in range(len(best_route) - 1)
+    ]
+    best_route_edges.append(
+        (best_route[-1], best_route[0])
+    )  # Connect the last and first nodes
+    nx.draw_networkx_edges(
+        graph, pos, edgelist=best_route_edges, edge_color="r", width=2
+    )
+
+    plt.title("Best Route Visualization")
+    plt.show()
+
+
+visualize_best_route(G, best_route)
