@@ -1,0 +1,21 @@
+type,customer_id,customer_name,customer_email
+customer,1,John Smith,john.smith@example.com
+customer,2,Jane Doe,jane.doe@example.com
+customer,3,Bob Johnson,bob.johnson@example.com
+customer,4,Alice Brown,alice.brown@example.com
+customer,5,David Miller,david.miller@example.com
+customer,6,Emma Wilson,emma.wilson@example.com
+customer,7,James Clark,james.clark@example.com
+customer,8,Lily Turner,lily.turner@example.com
+customer,9,William Harris,william.harris@example.com
+customer,10,Sophia Martin,sophia.martin@example.com
+customer,11,Mia Johnson,mia.johnson@example.com
+customer,12,Michael Davis,michael.davis@example.com
+customer,13,Olivia White,olivia.white@example.com
+customer,14,Lucas Smith,lucas.smith@example.com
+customer,15,Grace Wilson,grace.wilson@example.com
+customer,16,Aiden Brown,aiden.brown@example.com
+customer,17,Isabella Turner,isabella.turner@example.com
+customer,18,Noah Harris,noah.harris@example.com
+customer,19,Chloe Martin,chloe.martin@example.com
+customer,20,Ethan Johnson,ethan.johnson@example.com

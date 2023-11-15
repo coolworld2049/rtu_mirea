@@ -19,7 +19,7 @@ python -m mapred.job --customers $input_path/customers/customers.csv --products 
   -o $hdfs_path \
   -r hadoop "$@"
 
-for i in {1..7}; do
+for i in {1..6}; do
   remote="$hdfs_path/q$i/part*"
   loc=$local_path/"$i".csv
   echo "$remote" to $loc

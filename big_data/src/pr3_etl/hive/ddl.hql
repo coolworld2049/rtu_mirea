@@ -1,7 +1,7 @@
 DROP TABLE products;
 CREATE EXTERNAL TABLE IF NOT EXISTS products
 (
-    type          STRING default "product",
+    type          STRING,
     product_id    INT,
     product_name  STRING,
     product_price FLOAT
@@ -15,12 +15,12 @@ TBLPROPERTIES ("skip.header.line.count" = "1");
 DROP TABLE orders;
 CREATE EXTERNAL TABLE IF NOT EXISTS orders
 (
-    type       STRING default "order",
+    type       STRING,
     order_id   INT,
-    user_id    INT,
     product_id INT,
     quantity   INT,
-    order_date STRING
+    order_date STRING,
+    customer_id INT
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
@@ -31,12 +31,10 @@ TBLPROPERTIES ("skip.header.line.count" = "1");
 DROP TABLE customers;
 CREATE EXTERNAL TABLE IF NOT EXISTS customers
 (
-    type           STRING default "customer",
+    type           STRING,
     customer_id    INT,
     customer_name  STRING,
-    customer_email STRING,
-    product_id     INT,
-    order_date     STRING
+    customer_email STRING
 )
 ROW FORMAT DELIMITED
 FIELDS TERMINATED BY ','
