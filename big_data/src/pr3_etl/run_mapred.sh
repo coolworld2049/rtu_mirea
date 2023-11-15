@@ -10,7 +10,7 @@ local_path=mapred/output
 
 hdfs dfs -rm -r $hdfs_path
 
-merged_file_path=/tmp/merged_file.txt
+merged_file_path=merged_file.txt
 awk 'FNR > 1' data/customers.csv data/products.csv data/orders.csv > "$merged_file_path"
 
 [ -d $local_path ] || mkdir -p $local_path

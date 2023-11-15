@@ -47,8 +47,3 @@ result_5 = FOREACH grouped_data GENERATE
     group.products::product_price AS product_price,
     SUM(joined_data.quantity) AS total_quantity;
 STORE result_5 INTO 'warehouse/pig/output/q5' USING PigStorage(',');
-
--- 6
-joined_data_q6 = JOIN orders BY customer_id, customers BY customer_id;
-result_6 = FILTER joined_data_q6 BY customers::customer_name == 'Mia Johnson';
-STORE result_6 INTO 'warehouse/pig/output/q6' USING PigStorage(',');

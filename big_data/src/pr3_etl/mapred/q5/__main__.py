@@ -1,31 +1,33 @@
 from mrjob.job import MRJob
 
 
-class Query5Job(MRJob):
+class ProductTotalsJoinMRJob(MRJob):
     def mapper(self, _, line):
-        record_type, *fields = line.strip().split(",")
+        fields = line.strip().split(",")
 
-        if record_type == "order":
-            yield fields[2], (float(fields[3]), 1)
+        record_type = fields[0]
 
-        elif record_type == "product":
-            yield fields[0], ("product", float(fields[3]))
+        if record_type == "product":
+            # (product_id, ('product', product_price))
+            yield fields[1], ("product", [fields[2], fields[3]])
+        elif record_type == "order":
+            # (product_id, ('order', quantity))
+            yield fields[2], ("order", fields[3])
 
     def reducer(self, key, values):
-        product_name = None
-        product_price = None
+        product_info = None
         total_quantity = 0
 
-        for value in values:
-            record_type, data = value
+        for record_type, value in values:
             if record_type == "product":
-                product_price = data
+                product_info = value
             elif record_type == "order":
-                total_quantity += data[0]
+                total_quantity += float(value)
 
-        if product_price is not None:
-            yield product_name, (product_name, product_price, total_quantity)
+        if product_info is not None and total_quantity != 0:
+            product_name, product_price = product_info
+            yield product_name, (product_price, round(total_quantity, 1))
 
 
 if __name__ == "__main__":
-    Query5Job.run()
+    ProductTotalsJoinMRJob.run()

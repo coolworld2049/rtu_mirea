@@ -12,7 +12,7 @@ class Query2Job(MRJob):
                 customer_email,
             ) = fields
             if customer_name.startswith("J"):
-                yield fields[0], line
+                yield None, line
 
 
 if __name__ == "__main__":
