@@ -1,15 +1,14 @@
 #!/bin/bash
 
-USERNAME="$(whoami)"
-
 hdfs dfs -mkdir /tmp
-hdfs dfs -mkdir /user/"$(whoami)"/warehouse
 hdfs dfs -chmod g+w /tmp
+
+hdfs dfs -mkdir /user/"$(whoami)"/warehouse
 hdfs dfs -chmod g+w /user/"$(whoami)"/warehouse
 
-metastore_path=/tmp/hive-"$(whoami)"-metastore
-rm -rf $metastore_path
-mkdir $metastore_path
-cd $metastore_path
+METASTORE_PATH="$HOME"/hive-"$(whoami)"-metastore
+rm -rf "$METASTORE_PATH"
+mkdir "$METASTORE_PATH"
+cd "$METASTORE_PATH" || exit
 
 schematool -dbType derby -initSchema

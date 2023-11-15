@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-set -eou pipefail
+set +e
 
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit
 
-. copy_to_hdfs.sh
-
-bash ~/rtu_mirea/big_data/scripts/hive/exec.sh -f "$PWD"/hive/ddl.hql
-bash ~/rtu_mirea/big_data/scripts/hive/exec.sh -f "$PWD"/hive/dml.hql
-bash ~/rtu_mirea/big_data/scripts/hive/exec.sh -f "$PWD"/hive/dql.hql
+bash ~/rtu_mirea/big_data/scripts/hive/exec.sh --outputformat=csv2 -f hive/ddl.hql
+bash ~/rtu_mirea/big_data/scripts/hive/exec.sh --outputformat=csv2 -f hive/dql.hql > hive/query_result.csv
