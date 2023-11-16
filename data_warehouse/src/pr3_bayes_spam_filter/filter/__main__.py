@@ -1,4 +1,3 @@
-import json
 import math
 import pathlib
 import re
@@ -11,6 +10,21 @@ init()
 
 
 class NaiveBayesModel:
+    NEUTRAL_WORDS = {
+        "and",
+        "the",
+        "in",
+        "to",
+        "of",
+        "a",
+        "an",
+        "is",
+        "it",
+        "on",
+        "with",
+        "for",
+    }
+
     def __init__(self):
         self.class_probabilities = defaultdict(float)
         self.word_probabilities = defaultdict(lambda: defaultdict(float))
@@ -26,25 +40,10 @@ class NaiveBayesModel:
         spam_words = defaultdict(int)
         ham_words = defaultdict(int)
 
-        exclude_words = {
-            "and",
-            "the",
-            "in",
-            "to",
-            "of",
-            "a",
-            "an",
-            "is",
-            "it",
-            "on",
-            "with",
-            "for",
-        }
-
         for _, entry in training_data.iterrows():
             _class, text = entry["class"], entry["text"]
             words = self.get_words(text)
-            words = [w for w in words if w not in exclude_words]
+            words = [w for w in words if w not in self.NEUTRAL_WORDS]
 
             for word in words:
                 if _class == "spam":
@@ -59,13 +58,6 @@ class NaiveBayesModel:
             )
             self.word_probabilities["ham"][word] = (ham_words[word] + 1) / (
                 (total_count - spam_count) + 2
-            )
-
-        for _class in list(self.word_probabilities.keys()):
-            _class_wp = list(self.word_probabilities[_class].items())[:50]
-            _class_wp = tuple(map(lambda c: (c[0], round(c[1], 5)), _class_wp))
-            print(
-                f"word_probabilities - '{_class}': {json.dumps(dict(_class_wp), indent=2)}\n"
             )
 
     @staticmethod
@@ -120,7 +112,7 @@ if __name__ == "__main__":
         usecols=["class", "text"],
     )
 
-    train_df, test_df = split_data(df, split_ratio=0.6)
+    train_df, test_df = split_data(df, split_ratio=0.8)
 
     model = NaiveBayesModel()
     model.train(train_df)
@@ -129,7 +121,7 @@ if __name__ == "__main__":
 
     print("Prediction:\n")
     predictions = []
-    for text in test_texts:
+    for m_i, text in enumerate(test_texts):
         result, spam_words, spam_percent = model.predict(text)
         words = model.get_words(text)
         if spam_words:
@@ -144,7 +136,9 @@ if __name__ == "__main__":
             if result == "spam"
             else None
         )
-        print(f"Message{notif or ''}:\n\t{Fore.LIGHTWHITE_EX}{text}{Style.RESET_ALL}")
+        print(
+            f"{m_i}. Message{notif or ''}:\n\t{Fore.LIGHTWHITE_EX}{text}{Style.RESET_ALL}"
+        )
         print(
             f"Spam percent: {f'{spam_percent}%' if spam_percent else ''}\n"
             f"Spam words: {spam_words if len(spam_words) > 0 else ''}\n"
