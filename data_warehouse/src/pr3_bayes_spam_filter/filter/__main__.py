@@ -1,30 +1,14 @@
-import csv
-import pathlib
-import re
 import math
+import re
 from collections import defaultdict
-from abc import ABC, abstractmethod
 
-
-class DataLoader(ABC):
-    @abstractmethod
-    def load_data(self, file_path):
-        pass
-
-
-class CsvDataLoader(DataLoader):
-    def load_data(self, file_path):
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as file:
-            reader = csv.reader(file)
-            next(reader)  # Skip header
-            data = [row for row in reader]
-        return data
+import pandas as pd
 
 
 class NaiveBayesTrainer:
     def train(self, classifier, training_data):
         total_count = len(training_data)
-        spam_count = sum(1 for entry in training_data if entry[0] == "spam")
+        spam_count = sum(training_data["class"] == "spam")
 
         # Calculate class probabilities
         classifier.class_probabilities["spam"] = spam_count / total_count
@@ -34,8 +18,8 @@ class NaiveBayesTrainer:
         spam_words = defaultdict(int)
         ham_words = defaultdict(int)
 
-        for entry in training_data:
-            label, text = entry[0], entry[1]
+        for index, entry in training_data.iterrows():
+            label, text = entry["class"], entry["text"]
             words = re.findall(r"\b\w+\b", text.lower())
 
             for word in words:
@@ -87,10 +71,9 @@ def calculate_accuracy(predictions, true_labels):
 
 
 if __name__ == "__main__":
-    file_path = pathlib.Path(__file__).parent.parent.joinpath("input/spamdb.csv")
-
-    data_loader = CsvDataLoader()
-    data = data_loader.load_data(file_path)
+    data = pd.read_csv(
+        "../input/spamdb.csv", encoding="utf-8", usecols=["class", "text"]
+    )
 
     training_data, testing_data = split_data(data)
 
@@ -99,8 +82,8 @@ if __name__ == "__main__":
     trainer = NaiveBayesTrainer()
     trainer.train(classifier, training_data)
 
-    test_texts = [entry[1] for entry in testing_data]
-    true_labels = [entry[0] for entry in testing_data]
+    test_texts = testing_data["text"].tolist()
+    true_labels = testing_data["class"].tolist()
 
     predictions = [classifier.predict(text) for text in test_texts]
     accuracy = calculate_accuracy(predictions, true_labels)
