@@ -6,7 +6,8 @@ import pandas as pd
 
 
 class NaiveBayesTrainer:
-    def train(self, classifier, training_data):
+    @staticmethod
+    def train(classifier, training_data):
         total_count = len(training_data)
         spam_count = sum(training_data["class"] == "spam")
 
@@ -75,7 +76,7 @@ if __name__ == "__main__":
         "../input/spamdb.csv", encoding="utf-8", usecols=["class", "text"]
     )
 
-    training_data, testing_data = split_data(data)
+    training_data, testing_data = split_data(data, split_ratio=0.6)
 
     classifier = NaiveBayesClassifier()
 
