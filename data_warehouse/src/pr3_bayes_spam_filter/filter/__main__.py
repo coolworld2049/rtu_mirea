@@ -1,8 +1,11 @@
+import json
 import math
+import pathlib
 import re
 from collections import defaultdict
 
 import pandas as pd
+from loguru import logger
 
 
 class NaiveBayesTrainer:
@@ -11,11 +14,13 @@ class NaiveBayesTrainer:
         total_count = len(training_data)
         spam_count = sum(training_data["class"] == "spam")
 
-        # Calculate class probabilities
         classifier.class_probabilities["spam"] = spam_count / total_count
         classifier.class_probabilities["ham"] = (total_count - spam_count) / total_count
 
-        # Calculate word probabilities
+        logger.info(
+            f"Class probabilities: {json.dumps(classifier.class_probabilities)}"
+        )
+
         spam_words = defaultdict(int)
         ham_words = defaultdict(int)
 
@@ -36,6 +41,8 @@ class NaiveBayesTrainer:
             classifier.word_probabilities["ham"][word] = (ham_words[word] + 1) / (
                 (total_count - spam_count) + 2
             )
+
+        logger.info("Word probabilities calculated")
 
 
 class NaiveBayesClassifier:
@@ -72,21 +79,24 @@ def calculate_accuracy(predictions, true_labels):
 
 
 if __name__ == "__main__":
-    data = pd.read_csv(
-        "../input/spamdb.csv", encoding="utf-8", usecols=["class", "text"]
+    df = pd.read_csv(
+        pathlib.Path(__file__).parent.parent.joinpath("input/spamdb.csv"),
+        encoding="utf-8",
+        usecols=["class", "text"],
     )
+    logger.info(f"Input DataFrame:\n{df.head()}")
 
-    training_data, testing_data = split_data(data, split_ratio=0.6)
+    training_data, testing_data = split_data(df, split_ratio=0.6)
 
     classifier = NaiveBayesClassifier()
-
     trainer = NaiveBayesTrainer()
+
     trainer.train(classifier, training_data)
 
     test_texts = testing_data["text"].tolist()
-    true_labels = testing_data["class"].tolist()
-
     predictions = [classifier.predict(text) for text in test_texts]
+
+    true_labels = testing_data["class"].tolist()
     accuracy = calculate_accuracy(predictions, true_labels)
 
-    print(f"Accuracy: {accuracy * 100:.2f}%")
+    logger.info(f"Accuracy: {accuracy * 100:.2f}%")
