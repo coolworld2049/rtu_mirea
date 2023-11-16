@@ -24,12 +24,12 @@ class NaiveBayesTrainer:
         spam_words = defaultdict(int)
         ham_words = defaultdict(int)
 
-        for index, entry in training_data.iterrows():
-            label, text = entry["class"], entry["text"]
+        for _, entry in training_data.iterrows():
+            _class, text = entry["class"], entry["text"]
             words = re.findall(r"\b\w+\b", text.lower())
 
             for word in words:
-                if label == "spam":
+                if _class == "spam":
                     spam_words[word] += 1
                 else:
                     ham_words[word] += 1
@@ -41,7 +41,12 @@ class NaiveBayesTrainer:
             classifier.word_probabilities["ham"][word] = (ham_words[word] + 1) / (
                 (total_count - spam_count) + 2
             )
-
+        logger.info(
+            f"word_probabilities - 'ham': {tuple(classifier.word_probabilities['ham'].items())[:10]}"
+        )
+        logger.info(
+            f"word_probabilities - 'spam': {tuple(classifier.word_probabilities['spam'].items())[:10]}"
+        )
         logger.info("Word probabilities calculated")
 
 
@@ -51,11 +56,10 @@ class NaiveBayesClassifier:
         self.word_probabilities = defaultdict(lambda: defaultdict(float))
 
     def predict(self, text):
-        words = re.findall(r"\b\w+\b", text.lower())
         spam_score = math.log(self.class_probabilities["spam"])
         ham_score = math.log(self.class_probabilities["ham"])
 
-        for word in words:
+        for word in re.findall(r"\b\w+\b", text.lower()):
             spam_score += math.log(self.word_probabilities["spam"].get(word, 1e-10))
             ham_score += math.log(self.word_probabilities["ham"].get(word, 1e-10))
 
@@ -86,17 +90,17 @@ if __name__ == "__main__":
     )
     logger.info(f"Input DataFrame:\n{df.head()}")
 
-    training_data, testing_data = split_data(df, split_ratio=0.6)
+    train_df, test_df = split_data(df, split_ratio=0.6)
 
     classifier = NaiveBayesClassifier()
     trainer = NaiveBayesTrainer()
 
-    trainer.train(classifier, training_data)
+    trainer.train(classifier, train_df)
 
-    test_texts = testing_data["text"].tolist()
+    test_texts = test_df["text"].tolist()
     predictions = [classifier.predict(text) for text in test_texts]
 
-    true_labels = testing_data["class"].tolist()
+    true_labels = test_df["class"].tolist()
     accuracy = calculate_accuracy(predictions, true_labels)
 
     logger.info(f"Accuracy: {accuracy * 100:.2f}%")
