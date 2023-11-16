@@ -18,7 +18,7 @@ sudo tar -xf /tmp/apache-hive-${HIVE_VERSION}-bin.tar.gz -C "$HIVE_HOME" --strip
 
 {
   echo "HIVE_HOME=$HIVE_HOME"
-  echo "PATH=\$PATH:\$HIVE_HOME/bin:"
+  echo "PATH=\$PATH:\$HIVE_HOME/bin"
   echo "export HIVE_HOME"
   echo "export PATH"
 } >> ~/.bashrc
@@ -64,3 +64,5 @@ sudo bash -c "cat > /etc/profile.d/hive.sh <<EOL
 HADOOP=$HADOOP_HOME/bin/hadoop
 export HADOOP
 EOL"
+
+echo "Make sure to start a new terminal or run 'source ~/.bashrc' to apply the changes."
