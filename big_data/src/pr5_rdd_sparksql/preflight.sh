@@ -3,8 +3,11 @@
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit
 
-hdfs dfs -mkdir tweets
+HDFS_DIR=tweets
+
+hdfs dfs -mkdir $HDFS_DIR
 
 for file in ~/tweets/*.csv; do
-  hdfs dfs -copyFromLocal  "$file" tweets/"$file"
+  echo copy "$file" to $HDFS_DIR/"$file"
+  hdfs dfs -copyFromLocal  "$file" $HDFS_DIR
 done;

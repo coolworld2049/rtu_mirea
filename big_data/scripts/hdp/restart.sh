@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd ..
+cd hdp || exit
+
 . stop.sh
 . clean.sh
 . format.sh
