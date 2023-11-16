@@ -1,27 +1,25 @@
 #!/usr/bin/env bash
 
-# Specify the Pig version
-PIG_VERSION="0.17.0"
+PIG_VERSION=0.17.0
+PIG_HOME=/usr/local/pig
 
-# Specify the mirror URL to download Pig
-MIRROR_URL="https://downloads.apache.org/pig/pig-${PIG_VERSION}/pig-${PIG_VERSION}.tar.gz"
-
-# Specify the directory where Pig will be installed
-INSTALL_DIR=$HADOOP_HOME/pig
+sudo mkdir "$PIG_HOME"
+sudo chown "$(whoami)":"$(whoami)" -R "$PIG_HOME"
 
 # Download and extract Pig
 echo "Downloading Pig ${PIG_VERSION}..."
-wget -q "${MIRROR_URL}" -O pig-${PIG_VERSION}.tar.gz
-tar -xzf pig-${PIG_VERSION}.tar.gz
-rm pig-${PIG_VERSION}.tar.gz
-
-# Move Pig to the installation directory
-sudo mv pig-${PIG_VERSION} "${INSTALL_DIR}"
+sudo wget -nc https://downloads.apache.org/pig/pig-${PIG_VERSION}/pig-${PIG_VERSION}.tar.gz -P /tmp
+sudo tar -xzf /tmp/pig-${PIG_VERSION}.tar.gz -C "$PIG_HOME" --strip-components=1
+sudo chown "$(whoami)":"$(whoami)" -R "$PIG_HOME"
 
 # Set up environment variables
-echo "export PIG_HOME=${INSTALL_DIR}" >> ~/.bashrc
-echo "export PATH=\$PATH:\$PIG_HOME/bin" >> ~/.bashrc
+{
+  echo "PIG_HOME=${PIG_HOME}"
+  echo "PATH=\$PATH:\$PIG_HOME/bin:"
+  echo "export PIG_HOME"
+  echo "export PATH"
+} >> ~/.bashrc
 
 # Display installation completion message
-echo "Apache Pig ${PIG_VERSION} has been installed to ${INSTALL_DIR}."
+echo "Apache Pig ${PIG_VERSION} has been installed to ${PIG_HOME}."
 echo "Make sure to start a new terminal or run 'source ~/.bashrc' to apply the changes."

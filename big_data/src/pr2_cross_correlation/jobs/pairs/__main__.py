@@ -1,23 +1,20 @@
 from mrjob.job import MRJob
-from mrjob.step import MRStep
 
 
-class CrossCorrelationPairs(MRJob):
-    def steps(self):
-        return [MRStep(mapper=self.mapper, reducer=self.reducer)]
-
+class PairsAlgorithm(MRJob):
     def mapper(self, _, line):
-        items = line.strip().split(",")
+        # Parse the input line into a list of products
+        products = line.strip().split(",")
 
-        # Формирует все возможные пары товаров в строке и передает их в reducer
-        for i in range(len(items)):
-            for j in range(i + 1, len(items)):
-                yield (max(items[i], items[j]), min(items[i], items[j])), 1
+        # Emit pairs for each product combination
+        for i in range(len(products)):
+            for j in range(i + 1, len(products)):
+                yield tuple(sorted([products[i], products[j]])), 1
 
     def reducer(self, key, values):
-        # Суммирует значения для каждой уникальной пары товаров
+        # Output the pair count for pairs
         yield key, sum(values)
 
 
 if __name__ == "__main__":
-    CrossCorrelationPairs.run()
+    PairsAlgorithm.run()
