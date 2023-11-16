@@ -8,6 +8,8 @@ OUTPUT_PATH=output/"$(basename "$ALGORITHM_NAME")"
 MR_JOB_KWARGS="-o $OUTPUT_PATH -r hadoop $2"
 FILE=part-00000
 
+[ -f input ] || python -m gen_db -o input -n 100 -rr 6,18
+
 echo -e "\nWORKDIR $SCRIPTDIR"
 hdfs dfs -rm -r /user/ivanovnp/output/"$1"
 

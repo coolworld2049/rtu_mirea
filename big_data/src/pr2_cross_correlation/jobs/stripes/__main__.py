@@ -1,37 +1,24 @@
 from mrjob.job import MRJob
-from mrjob.step import MRStep
 
 
-class CrossCorrelationStripes(MRJob):
-    def steps(self):
-        return [
-            MRStep(mapper=self.mapper, combiner=self.combiner, reducer=self.reducer)
-        ]
-
+class StripesAlgorithm(MRJob):
     def mapper(self, _, line):
-        items = line.strip().split(",")
+        # Parse the input line into a list of products
+        products = line.strip().split(",")
 
-        # Формирует словарь для каждого товара, где ключ - другие товары, значение - количество вхождений
-        for i in range(len(items)):
-            stripe = {item: 1 for item in items if item != items[i]}
-            yield items[i], stripe
-
-    def combiner(self, key, values):
-        # Комбинирует данные на mapper, суммируя словари для каждого товара
-        combined_stripe = {}
-        for stripe in values:
-            for item, count in stripe.items():
-                combined_stripe[item] = combined_stripe.get(item, 0) + count
-        yield key, combined_stripe
+        # Emit stripes for each product with its associated products
+        for product in products:
+            yield product, {p: 1 for p in products if p != product}
 
     def reducer(self, key, values):
-        # Суммирует словари для каждого товара
+        # Merge the final stripe dictionaries
         combined_stripe = {}
         for stripe in values:
-            for item, count in stripe.items():
-                combined_stripe[item] = combined_stripe.get(item, 0) + count
+            for product, count in stripe.items():
+                combined_stripe[product] = combined_stripe.get(product, 0) + count
+
         yield key, combined_stripe
 
 
 if __name__ == "__main__":
-    CrossCorrelationStripes.run()
+    StripesAlgorithm.run()

@@ -4,7 +4,6 @@ import random
 
 from loguru import logger
 from mimesis import Generic
-from mimesis.types import Seed
 
 generic = Generic()
 generic.seed = 999
