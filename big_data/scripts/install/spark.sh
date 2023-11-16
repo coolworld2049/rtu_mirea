@@ -14,6 +14,10 @@ sudo cp $SPARK_HOME/conf/spark-env.sh.template  $SPARK_HOME/conf/spark-env.sh
 {
   echo "SPARK_HOME=$SPARK_HOME"
   echo "PATH=\$PATH:\$SPARK_HOME/bin"
+  echo "HADOOP_CONF_DIR=$HADOOP_HOME/etc/hadoop"
+  echo "LD_LIBRARY_PATH=$HADOOP_HOME/lib/native:$LD_LIBRARY_PATH"
+  echo "export HADOOP_CONF_DIR"
+  echo "export LD_LIBRARY_PATH"
   echo "export SPARK_HOME"
   echo "export PATH"
 } >> ~/.bashrc
@@ -25,14 +29,7 @@ spark.yarn.am.memory 512m
 spark.executor.memory 512m
 EOL"
 
-sudo bash -c "cat > $SPARK_HOME/conf/spark-defaults.conf <<EOL
-spark.master yarn
-spark.driver.memory 512m
-spark.yarn.am.memory 512m
-spark.executor.memory 512m
-EOL"
-
-sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
+sudo bash -c "cat > $SPARK_HOME/conf/spark-env.conf <<EOL
 export PYSPARK_PYTHON=/usr/bin/python3
 export PYSPARK_DRIVER_PYTHON=/usr/bin/python3
 EOL"

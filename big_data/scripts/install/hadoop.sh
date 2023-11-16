@@ -104,6 +104,14 @@ sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
     <name>yarn.resourcemanager.resource-tracker.address</name>
     <value>127.0.0.1:8031</value>
   </property>
+  <property>
+    <name>yarn.nodemanager.pmem-check-enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value>false</value>
+  </property>
 </configuration>
 EOL"
 echo "Hadoop yarn-site.xml configured successfully."
