@@ -22,16 +22,16 @@ sudo cp $SPARK_HOME/conf/spark-env.sh.template  $SPARK_HOME/conf/spark-env.sh
   echo "export PATH"
 } >> ~/.bashrc
 
-sudo bash -c "cat > $SPARK_HOME/conf/spark-defaults.conf <<EOL
+sudo bash -c "cat >> $SPARK_HOME/conf/spark-defaults.conf <<EOL
 spark.master yarn
 spark.driver.memory 512m
 spark.yarn.am.memory 512m
 spark.executor.memory 512m
 EOL"
 
-sudo bash -c "cat > $SPARK_HOME/conf/spark-env.conf <<EOL
-export PYSPARK_PYTHON=/usr/bin/python3
-export PYSPARK_DRIVER_PYTHON=/usr/bin/python3
+sudo bash -c "cat >> $SPARK_HOME/conf/spark-env.conf <<EOL
+export PYSPARK_PYTHON=/usr/bin/python3.11
+export PYSPARK_DRIVER_PYTHON=/usr/bin/python3.11
 EOL"
 
 echo "Apache Spark $SPARK_VERSION with SparkSQL has been installed to $SPARK_HOME successfully."
