@@ -24,6 +24,7 @@ pytest = "^7.4.3"
 
 [tool.poetry.group.big_data.dependencies]
 mrjob = "^0.7.4"
+pyspark = "^3.5.0"
 
 
 [tool.poetry.group.data_warehouse-dev.dependencies]
