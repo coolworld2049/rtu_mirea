@@ -1,7 +1,7 @@
 from pyspark import SparkContext
 
-from pr5_rdd_sparksql.query.const import politicians, russia_country_names
-from pr5_rdd_sparksql.query.env import dataset_path
+from pr5_tweets.env import dataset_path
+from pr5_tweets.rdd_sparksql.query.const import politicians, russia_country_names
 
 with SparkContext() as sc:
     rdd = sc.textFile(f"{dataset_path}/ira_tweets_csv_hashed.csv").map(

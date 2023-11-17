@@ -1,7 +1,7 @@
 from pyspark.sql import SparkSession
 
-from pr5_rdd_sparksql.query.env import dataset_path
-from pr5_rdd_sparksql.query.const import politicians, russia_country_names
+from pr5_tweets.rdd_sparksql.query.env import dataset_path
+from pr5_tweets.rdd_sparksql.query.const import politicians, russia_country_names
 
 with SparkSession.builder.getOrCreate() as spark:
     df = spark.read.csv(
