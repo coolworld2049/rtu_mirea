@@ -22,3 +22,5 @@ for file in "$LOCAL_DIR"/*.csv; do
   echo copy "$file" to "$HDFS_DIR"/"$file_name"
   hdfs dfs -copyFromLocal "$file" $HDFS_DIR
 done;
+
+hdfs dfs -mkdir "$HDFS_DIR"/rdd_checkpoint
