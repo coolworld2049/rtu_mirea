@@ -5,10 +5,19 @@ cd "$SCRIPTDIR" || exit
 
 HDFS_DIR=tweets
 LOCAL_DIR=$HOME/tweets
+CUR_DIR="$SCRIPTDIR"/"$HDFS_DIR"
+
+cat "$LOCAL_DIR"/ira_tweets_csv_hashed.csv | head -n 10 \
+  > "$LOCAL_DIR"/ira_tweets_csv_hashed-10.csv
+
+mv "$LOCAL_DIR"/Twitter_Elections_Integrity_Datasets_hashed_README.txt \
+  "$LOCAL_DIR"/Twitter_Elections_Integrity_Datasets_hashed_README.md
+
+[ -d "$CUR_DIR" ] || sudo ln -s "$LOCAL_DIR" "$CUR_DIR"
 
 hdfs dfs -mkdir $HDFS_DIR
 
-for file in "$LOCAL_DIR"/*; do
+for file in "$LOCAL_DIR"/*.csv; do
   file_name="$(basename "$file")"
   echo copy "$file" to "$HDFS_DIR"/"$file_name"
   hdfs dfs -copyFromLocal "$file" $HDFS_DIR
