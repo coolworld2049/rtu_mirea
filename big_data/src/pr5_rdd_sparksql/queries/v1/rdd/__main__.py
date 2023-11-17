@@ -1,5 +1,3 @@
-import ast
-
 from py4j.protocol import Py4JJavaError
 from pyspark import SparkContext
 
@@ -22,7 +20,6 @@ with SparkContext() as sc:
                 )
             )
             and any(p_lower in row[12].lower() for p_lower in politicians)
-            or set(ast.literal_eval(row[27])).issubset(politicians)
         )
         .map(lambda row: (row[3], 1))
         .reduceByKey(lambda a, b: a + b)
@@ -36,4 +33,5 @@ with SparkContext() as sc:
                 f"{dataset_path}/output/v1_rdd_result"
             )
         except Py4JJavaError as e:
-            print(e)
+            pass
+    sc.stop()
