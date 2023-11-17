@@ -14,7 +14,7 @@ with SparkSession.builder.getOrCreate() as spark:
     politicians = tuple(
         map(lambda c: [f"'%{str(x).lower()}%'" for x in c], politicians_tuple)
     )
-    politicians_flat = [x for p in politicians for x in p]
+    politicians_flat = {x for p in politicians for x in p}
     query_1 = f"""
         SELECT user_screen_name, COUNT(*) AS mention_count
         FROM tweets

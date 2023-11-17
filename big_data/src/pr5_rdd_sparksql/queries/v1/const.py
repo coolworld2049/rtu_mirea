@@ -19,4 +19,4 @@ politicians_tuple = (
     ("Лео", "Варадкар"),  # Ireland
     ("Матеуш", "Моравецкий"),  # Poland
 )
-politicians = [x.lower() for p in politicians_tuple for x in p]
+politicians = {x.lower() for p in politicians_tuple for x in p}

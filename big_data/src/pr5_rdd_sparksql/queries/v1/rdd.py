@@ -1,3 +1,5 @@
+import ast
+
 from py4j.protocol import Py4JJavaError
 from pyspark import SparkContext
 
@@ -13,9 +15,14 @@ with SparkContext() as sc:
     )
     result = (
         rdd.filter(
-            lambda row: row[10] == "ru"
-            and row[11] == "ru"
+            lambda row: all(
+                (
+                    row[10] == "ru",
+                    row[11] == "ru",
+                )
+            )
             and any(p_lower in row[12].lower() for p_lower in politicians)
+            or set(ast.literal_eval(row[27])).issubset(politicians)
         )
         .map(lambda row: (row[3], 1))
         .reduceByKey(lambda a, b: a + b)
