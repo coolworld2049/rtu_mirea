@@ -20,3 +20,4 @@ politicians_tuple = (
     ("Матеуш", "Моравецкий"),  # Poland
 )
 politicians = {x.lower() for p in politicians_tuple for x in p}
+russia_country_names = {"РФ", "Россия"}
