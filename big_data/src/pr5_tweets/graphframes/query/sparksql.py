@@ -23,10 +23,9 @@ def main():
         }
     ).getOrCreate() as spark:
         spark.sparkContext.setCheckpointDir(f"{dataset_path}/rdd_checkpoint")
-        rdd = spark.read.csv(
+        data_rdd = spark.read.csv(
             f"{dataset_path}/ira_tweets_csv_hashed.csv", header=True, inferSchema=True
-        )
-        data_rdd = rdd.rdd.map(tuple)
+        ).select("tweetid", "userid", "user_display_name").rdd.map(tuple)
         print(f"data_rdd: {data_rdd.take(1)}")
         n = 5
         target_user = (
