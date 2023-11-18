@@ -11,6 +11,7 @@ sudo wget -nc https://archive.apache.org/dist/spark/spark-$SPARK_VERSION/spark-$
 sudo tar -xf /tmp/spark-$SPARK_VERSION-bin-hadoop2.7.tgz -C $SPARK_HOME --strip-components=1
 sudo cp $SPARK_HOME/conf/spark-defaults.conf.template $SPARK_HOME/conf/spark-defaults.conf
 sudo cp $SPARK_HOME/conf/spark-env.sh.template  $SPARK_HOME/conf/spark-env.sh
+
 {
   echo "SPARK_HOME=$SPARK_HOME"
   echo "PATH=\$PATH:\$SPARK_HOME/bin"
