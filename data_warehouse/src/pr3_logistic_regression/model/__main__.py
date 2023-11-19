@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from pandas import DataFrame
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -51,14 +52,14 @@ class FeatureSelector:
     @staticmethod
     def select_features(data, threshold=0.8):
         correlation_matrix = data.corr().abs()
-        upper_triangle = correlation_matrix.where(
+        upper_triangle: DataFrame = correlation_matrix.where(
             np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool_)
         )
-        to_drop = [
-            column
-            for column in upper_triangle.columns
+        to_drop = {
+            i: column
+            for i, column in enumerate(upper_triangle.columns)
             if any(upper_triangle[column] > threshold)
-        ]
+        }
         return to_drop
 
 
@@ -87,10 +88,10 @@ if __name__ == "__main__":
     )
 
     feature_selector = FeatureSelector()
-    to_drop = feature_selector.select_features(data)
+    to_drop = feature_selector.select_features(data, threshold=0.4)
 
-    X_train_selected = np.delete(X_train_normalized, to_drop, axis=1)
-    X_test_selected = np.delete(X_test_normalized, to_drop, axis=1)
+    X_train_selected = np.delete(X_train_normalized, list(to_drop.keys()), axis=1)
+    X_test_selected = np.delete(X_test_normalized, list(to_drop.keys()), axis=1)
 
     theta_selected, _ = logistic_regression.gradient_descent(
         X_train_selected, y_train, np.zeros(X_train_selected.shape[1]), 0.01, 1000

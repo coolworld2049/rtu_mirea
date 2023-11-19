@@ -143,7 +143,7 @@ logger.info(f"Total Distance: {distance_calculator.calculate_distance(best_route
 
 
 def visualize_best_route(graph, best_route):
-    pos = nx.spring_layout(graph, k=10)
+    pos = nx.spring_layout(graph, k=15, scale=2, seed=42)
     plt.figure(1, (12, 12), dpi=200)
 
     nx.draw(
@@ -171,7 +171,7 @@ def visualize_best_route(graph, best_route):
         edgelist=best_route_edges,
         edge_color="r",
         width=1,
-        connectionstyle="arc3,rad=0.2",  # Adjust the curvature of the arrow
+        connectionstyle="arc3,rad=0.3",  # Adjust the curvature of the arrow
         arrowsize=15,
         arrows=True,
         arrowstyle="-|>",
