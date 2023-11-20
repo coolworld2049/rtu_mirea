@@ -61,9 +61,21 @@ user_started_chain.show()
 user_started_chain_user_id = user_started_chain.take(1)[0]["userid"]
 logger.info(f"user_started_chain_user_id: {user_started_chain_user_id}")
 
+nth_chain = 1
 filtered_user_started_chain = user_started_chain.filter(
     F.col("userid") == user_started_chain_user_id
-).limit(40)
+)
+filtered_user_started_chain_max = (
+    filtered_user_started_chain.groupBy("inDegree", "userid")
+    .agg({"inDegree": "max"})
+    .orderBy(F.desc("max(inDegree)"))
+)
+logger.info("filtered_user_started_chain_max")
+filtered_user_started_chain_max.show()
+
+filtered_user_started_chain = filtered_user_started_chain.filter(
+    F.col("inDegree") == filtered_user_started_chain_max.take(1)[0]["max(inDegree)"]
+)
 logger.info(
     f"filtered_user_started_chain - count: {filtered_user_started_chain.count()}"
 )
@@ -82,9 +94,14 @@ for row in filtered_user_started_chain.collect():
 for row in filtered_user_started_chain.collect():
     # dst - in_reply_to_tweet_id src - tweetid
     # in_reply_to_userid -> userid -> tweet_id (src) -> in_reply_to_tweet_id (dst)
-    nx_graph.add_edge(row["in_reply_to_userid"], row["userid"])
-    nx_graph.add_edge(row["userid"], row["src"])
+    # nx_graph.add_edge(row["in_reply_to_userid"], row["userid"])
+    # nx_graph.add_edge(row["userid"], row["src"])
+    # nx_graph.add_edge(row["src"], row["dst"])
+
+    # tweet_id (src) -> in_reply_to_tweet_id -> (dst) in_reply_to_userid -> userid
     nx_graph.add_edge(row["src"], row["dst"])
+    nx_graph.add_edge(row["dst"], row["in_reply_to_userid"])
+    nx_graph.add_edge(row["in_reply_to_userid"], row["userid"])
 pos = nx.spring_layout(nx_graph, k=0.5)
 nx.draw(
     nx_graph,
