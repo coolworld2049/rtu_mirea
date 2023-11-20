@@ -1,4 +1,3 @@
-import findspark
 from pyspark.sql import SparkSession
 from graphframes import GraphFrame
 import pandas as pd
@@ -6,7 +5,6 @@ import pandas as pd
 from pr5_tweets.spark.env import spark_conf, spark_work_dir
 
 # Initialize Spark session
-findspark.init()
 spark = (
     SparkSession.builder.appName("GraphFramesDemo").config(map=spark_conf).getOrCreate()
 )
