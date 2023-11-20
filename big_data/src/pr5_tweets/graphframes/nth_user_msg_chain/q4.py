@@ -45,14 +45,15 @@ edges.show(4)
 
 g = GraphFrame(vertices, edges)
 
+in_degree = g.inDegrees.filter("inDegree != 0 and id is not null").orderBy(F.desc("inDegree"))
+logger.info("inDegree")
+in_degree.show()
+
 user_started_chain = (
-    g.inDegrees.filter("inDegree != 0 and id is not null")
-    .join(vertices, "id")
-    .withColumnRenamed("id", "src")
+    in_degree
+    .join(vertices, "id").withColumnRenamed("id", "src")
     .join(edges, "src")
-    .filter("dst is not null and in_reply_to_userid is not null")
-    .filter("reply_count > 0")
-    .filter("in_reply_to_userid != userid")
+    .filter("src is not null and dst is not null and reply_count > 0")
     .orderBy(F.desc("inDegree"))
 )
 logger.info("user_started_chain")
@@ -67,31 +68,30 @@ filtered_user_started_chain = user_started_chain.filter(
 )
 filtered_user_started_chain_max = (
     filtered_user_started_chain.groupBy("inDegree", "userid")
-    .agg({"inDegree": "max"})
-    .orderBy(F.desc("max(inDegree)"))
+    .count().sort("inDegree")
+    .orderBy(F.desc("count"))
 )
 logger.info("filtered_user_started_chain_max")
 filtered_user_started_chain_max.show()
 
 filtered_user_started_chain = filtered_user_started_chain.filter(
-    F.col("inDegree") == filtered_user_started_chain_max.take(1)[0]["max(inDegree)"]
+    F.col("inDegree") == filtered_user_started_chain_max.take(1)[0]["inDegree"]
 )
 logger.info(
     f"filtered_user_started_chain - count: {filtered_user_started_chain.count()}"
 )
 filtered_user_started_chain.show()
 
-plt.figure(figsize=(19, 8), dpi=100)
+plt.figure(figsize=(20, 20), dpi=100)
 
 nx_graph = nx.MultiDiGraph()
 
 for row in filtered_user_started_chain.collect():
     nx_graph.add_node(row["src"])
     nx_graph.add_node(row["dst"])
-    nx_graph.add_node(row["userid"], color="blue")
-    nx_graph.add_node(row["in_reply_to_userid"], color="magenta")
+    # nx_graph.add_node(row["userid"], color="blue")
+    # nx_graph.add_node(row["in_reply_to_userid"], color="magenta")
 
-for row in filtered_user_started_chain.collect():
     # dst - in_reply_to_tweet_id src - tweetid
     # in_reply_to_userid -> userid -> tweet_id (src) -> in_reply_to_tweet_id (dst)
     # nx_graph.add_edge(row["in_reply_to_userid"], row["userid"])
@@ -99,8 +99,8 @@ for row in filtered_user_started_chain.collect():
     # nx_graph.add_edge(row["src"], row["dst"])
 
     # tweet_id (src) -> in_reply_to_tweet_id -> (dst) in_reply_to_userid -> userid
-    nx_graph.add_edge(row["src"], row["dst"])
-    nx_graph.add_edge(row["dst"], row["in_reply_to_userid"])
+    # nx_graph.add_edge(row["src"], row["dst"])
+    # nx_graph.add_edge(row["dst"], row["in_reply_to_userid"])
     nx_graph.add_edge(row["in_reply_to_userid"], row["userid"])
 pos = nx.spring_layout(nx_graph, k=0.5)
 nx.draw(

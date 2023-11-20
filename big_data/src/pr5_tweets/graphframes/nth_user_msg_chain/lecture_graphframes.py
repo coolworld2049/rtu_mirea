@@ -1,12 +1,13 @@
 # Загрузку набора данных произведем в DataFrame df. При этом обработка заголовка и вывод схемы будут выполнены
 # автоматически.
 from graphframes import GraphFrame
-from pyspark.shell import spark
+
+from pr5_tweets.spark.base import get_spark_session
+
+spark = get_spark_session()
 
 df = (
-    spark.read.format("csv")
-    .options(header="true", inferSchema="true")
-    .load("file:///storage/datasets/tweets/ira_tweets_csv_hashed.csv")
+    spark.read.csv("file:///home/ivanovnp/tweets/ira_tweets_csv_hashed.csv", inferSchema=True, header=True)
 )
 
 # Создадим представление tw над DataFrame df.
