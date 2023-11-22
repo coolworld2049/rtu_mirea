@@ -13,6 +13,10 @@ class DataNormalizer:
         X_test_normalized = scaler.transform(X_test)
         return X_train_normalized, X_test_normalized
 
+    @staticmethod
+    def remove_features(data, to_drop):
+        return data[:, [col for col in range(data.shape[1]) if col not in to_drop]]
+
 
 class LogisticRegression:
     @staticmethod
@@ -55,11 +59,11 @@ class FeatureSelector:
         upper_triangle: DataFrame = correlation_matrix.where(
             np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool_)
         )
-        to_drop = {
-            i: column
-            for i, column in enumerate(upper_triangle.columns)
+        to_drop = [
+            column
+            for column in upper_triangle.columns
             if any(upper_triangle[column] > threshold)
-        }
+        ]
         return to_drop
 
 
@@ -79,6 +83,7 @@ if __name__ == "__main__":
         X_train, X_test
     )
 
+    # Инициализация и обучение модели логистической регрессии
     logistic_regression = LogisticRegression()
     X_train_normalized = np.c_[
         np.ones((X_train_normalized.shape[0], 1)), X_train_normalized
@@ -87,23 +92,29 @@ if __name__ == "__main__":
         X_train_normalized, y_train, np.zeros(X_train_normalized.shape[1]), 0.01, 1000
     )
 
+    # Выбор признаков на основе корреляции
     feature_selector = FeatureSelector()
     to_drop = feature_selector.select_features(data, threshold=0.4)
 
-    X_train_selected = np.delete(X_train_normalized, list(to_drop.keys()), axis=1)
-    X_test_selected = np.delete(X_test_normalized, list(to_drop.keys()), axis=1)
+    # Удаление выбранных признаков из обучающей и тестовой выборок
+    X_train_selected = data_normalizer.remove_features(X_train_normalized, to_drop)
+    X_test_selected = data_normalizer.remove_features(X_test_normalized, to_drop)
 
+    # Обучение модели логистической регрессии на выбранных признаках
     theta_selected, _ = logistic_regression.gradient_descent(
         X_train_selected, y_train, np.zeros(X_train_selected.shape[1]), 0.01, 1000
     )
 
+    # Прогнозирование на обучающей и тестовой выборках
     y_train_pred = logistic_regression.predict(X_train_selected, theta_selected)
     y_test_pred = logistic_regression.predict(
         np.c_[np.ones((X_test_selected.shape[0], 1)), X_test_selected], theta_selected
     )
 
+    # Оценка точности модели
     accuracy_train = logistic_regression.accuracy(y_train, y_train_pred)
     accuracy_test = logistic_regression.accuracy(y_test, y_test_pred)
 
+    # Вывод результатов
     print(f"Точность на обучающей выборке: {accuracy_train}")
     print(f"Точность на тестовой выборке: {accuracy_test}")
