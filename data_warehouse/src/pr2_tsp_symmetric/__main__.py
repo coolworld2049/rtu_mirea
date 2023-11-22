@@ -55,14 +55,12 @@ class NaturalSelector:
 
 class CrossoverOperator:
     @staticmethod
-    def crossover(parent1, parent2):
+    def crossover(X, Y):
         """
         Cоздаются два потомка, комбинируя части родительских маршрутов для создания потомства
         """
-        start, end = sorted(random.sample(range(len(parent1)), 2))
-        temp = parent1[start:end] + [
-            city for city in parent2 if city not in parent1[start:end]
-        ]
+        start, end = sorted(random.sample(range(len(X)), 2))
+        temp = X[start:end] + [city for city in Y if city not in X[start:end]]
         return temp[start:] + temp[:start]
 
 
@@ -101,26 +99,29 @@ class GeneticAlgorithm:
             new_population = []
 
             for _ in range(pop_size // 2):
-                parent1 = self.parent_selector.select_parents(population, graph)
-                parent2 = self.parent_selector.select_parents(population, graph)
+                # Выбор двух родителей
+                X = self.parent_selector.select_parents(population, graph)
+                Y = self.parent_selector.select_parents(population, graph)
 
-                child1 = (
-                    self.crossover_operator.crossover(parent1, parent2)
+                # Кроссовер
+                XY = (
+                    self.crossover_operator.crossover(X, Y)
                     if random.random() < crossover_prob
-                    else parent1[:]
+                    else X[:]
                 )
-                child2 = (
-                    self.crossover_operator.crossover(parent2, parent1)
+                YX = (
+                    self.crossover_operator.crossover(Y, X)
                     if random.random() < crossover_prob
-                    else parent2[:]
+                    else Y[:]
                 )
 
+                # Мутация
                 new_population.extend(
                     [
                         self.mutation_operator.mutate(child)
                         if random.random() < mutation_prob
                         else child[:]
-                        for child in [child1, child2]
+                        for child in [XY, YX]
                     ]
                 )
 
@@ -134,7 +135,7 @@ class GeneticAlgorithm:
 
 
 def visualize_shortest_path(graph, best_route):
-    pos = nx.spring_layout(graph, k=10, scale=2, seed=42)
+    pos = nx.spring_layout(graph, k=10, seed=42)
     plt.figure(1, (12, 12), dpi=200)
 
     nx.draw(
