@@ -1,3 +1,4 @@
+import math
 import random
 import matplotlib.pyplot as plt
 from loguru import logger
@@ -6,12 +7,17 @@ from matplotlib.animation import FuncAnimation
 random.seed(42)
 
 
+def rastrigin_function(x):
+    A = 10
+    return A * len(x) + sum([(val**2 - A * math.cos(2 * math.pi * val)) for val in x])
+
+
 class Bee:
     def __init__(self, num_dimensions):
         # Инициализация пчелы со случайной позицией и вычислением её фитнес-функции
         self.num_dimensions = num_dimensions
         self.position = [random.uniform(-5, 5) for _ in range(num_dimensions)]
-        self.fitness = sphere_function(self.position)
+        self.fitness = rastrigin_function(self.position)
 
     def update(self, new_position, new_fitness):
         # Обновление позиции и фитнес-значения пчелы
@@ -44,7 +50,7 @@ class ABCAlgorithm:
             employed_bees_positions.append([bee.position for bee in self.employed_bees])
 
             # Вычисление вероятностей для фазы наблюдателей
-            self.calculate_probabilities()
+            self.calculate_probs()
 
             # Фаза наблюдателей
             self.onlooker_bees_phase()
@@ -81,11 +87,11 @@ class ABCAlgorithm:
                 + random.uniform(-1, 1) * (bee.position[i] - neighbor_bee.position[i])
                 for i in range(self.num_dimensions)
             ]
-            new_fitness = sphere_function(new_position)
+            new_fitness = rastrigin_function(new_position)
             if new_fitness < bee.fitness:
                 bee.update(new_position, new_fitness)
 
-    def calculate_probabilities(self):
+    def calculate_probs(self):
         # Вычисление вероятностей выбора пчел в фазе наблюдателей
         total_fitness = sum(bee.fitness for bee in self.employed_bees)
         self.probabilities = [bee.fitness / total_fitness for bee in self.employed_bees]
@@ -103,7 +109,7 @@ class ABCAlgorithm:
                 * (selected_bee.position[i] - neighbor_bee.position[i])
                 for i in range(self.num_dimensions)
             ]
-            new_fitness = sphere_function(new_position)
+            new_fitness = rastrigin_function(new_position)
             if new_fitness < selected_bee.fitness:
                 selected_bee.update(new_position, new_fitness)
 
@@ -112,11 +118,6 @@ class ABCAlgorithm:
             # Проверка, если найдена пчела с лучшим фитнесом, чем у текущего лучшего решения
             if bee.fitness > self.best_solution.fitness:
                 self.best_solution = bee
-
-
-def sphere_function(x):
-    # Функция для вычисления суммы квадратов элементов вектора
-    return sum([val**2 for val in x])
 
 
 def plot_fitness_progression_matplotlib(
@@ -163,7 +164,7 @@ def plot_fitness_progression_matplotlib(
 if __name__ == "__main__":
     num_employed = 40
     num_onlookers = 20
-    max_iterations = 20
+    max_iterations = 91
     abc_algorithm = ABCAlgorithm(num_employed, num_onlookers, max_iterations)
     (
         best_solution,
@@ -177,6 +178,6 @@ if __name__ == "__main__":
     )
 
     iterations = list(range(max_iterations))
-    plot_fitness_progression_matplotlib(
-        iterations, fitness_values, best_fitness_values, employed_bees_positions
-    )
+    # plot_fitness_progression_matplotlib(
+    #     iterations, fitness_values, best_fitness_values, employed_bees_positions
+    # )
