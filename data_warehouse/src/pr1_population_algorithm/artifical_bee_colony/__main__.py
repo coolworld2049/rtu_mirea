@@ -43,28 +43,24 @@ class ABCAlgorithm:
         self.best_fitness_values = []
 
     def run_algorithm(self):
+        """
+        Использование различных типов пчёл позволяет алгоритму достичь
+        баланса между интенсивным исследованием локальных областей и способностью выхода из локальных минимумов,
+        что может быть критично для глобальной оптимизации.
+        :return:
+        """
         employed_bees_positions = []
         for iteration in range(self.max_iterations):
-            # Фаза трудовых пчел
             self.employed_bees_phase()
             employed_bees_positions.append([bee.position for bee in self.employed_bees])
-
             # Вычисление вероятностей для фазы наблюдателей
             self.calculate_probs()
-
-            # Фаза наблюдателей
             self.onlooker_bees_phase()
-
-            # Фаза разведчиков
             self.scout_bees_phase()
-
-            # Запись данных о фитнесе для визуализации
             self.fitness_values.append([bee.fitness for bee in self.employed_bees])
             self.best_fitness_values.append(
                 (self.best_solution.position, self.best_solution.fitness)
             )
-
-            # Вывод информации о лучшем решении на текущей итерации
             logger.info(
                 f"Iteration {iteration}: Best Fitness = {self.best_solution.fitness}"
             )
@@ -77,6 +73,14 @@ class ABCAlgorithm:
         )
 
     def employed_bees_phase(self):
+        """
+        - Трудовые пчёлы ответственны за исследование окрестности своих
+            текущих позиций в пространстве параметров.
+        - Каждая трудовая пчела выбирает случайного соседа из числа трудовых пчёл
+            и обновляет свою позицию на основе позиции выбранной пчелы.
+        - Если новая позиция обеспечивает улучшение (меньшее значение фитнес-функции),
+            то трудовая пчела обновляет свою позицию.
+        """
         for bee in self.employed_bees:
             # Выбор случайной соседней пчелы и обновление позиции текущей пчелы
             neighbor_bee = random.choice(self.employed_bees)
@@ -97,6 +101,14 @@ class ABCAlgorithm:
         self.probabilities = [bee.fitness / total_fitness for bee in self.employed_bees]
 
     def onlooker_bees_phase(self):
+        """
+        - Наблюдатели следят за трудовыми пчёлами и выбирают пчелу для наблюдения
+            с вероятностью, пропорциональной их фитнес-значениям.
+        - Как и трудовые пчёлы, наблюдатели обновляют свои позиции,
+            основываясь на выбранной трудовой пчеле и её соседе.
+        - Так же как и в случае с трудовыми пчёлами, если новая позиция обеспечивает улучшение,
+            то наблюдатель обновляет свою позицию.
+        """
         for _ in range(self.num_onlookers):
             # Выбор трудовой пчелы на основе вероятностей и обновление её позиции
             selected_bee = random.choices(self.employed_bees, self.probabilities)[0]
@@ -114,6 +126,11 @@ class ABCAlgorithm:
                 selected_bee.update(new_position, new_fitness)
 
     def scout_bees_phase(self):
+        """
+        - Разведчики проверяют, необходимо ли заменить текущего лучшего решение.
+        - Если какая-то трудовая пчела имеет фитнес-значение лучше, чем у текущего лучшего решения,
+            то это становится новым лучшим решением.
+        """
         for bee in self.employed_bees:
             # Проверка, если найдена пчела с лучшим фитнесом, чем у текущего лучшего решения
             if bee.fitness > self.best_solution.fitness:
