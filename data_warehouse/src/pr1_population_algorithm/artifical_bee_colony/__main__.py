@@ -161,9 +161,9 @@ def plot_fitness_progression_matplotlib(
 
 
 if __name__ == "__main__":
-    num_employed = 20
-    num_onlookers = 10
-    max_iterations = 16
+    num_employed = 40
+    num_onlookers = 20
+    max_iterations = 20
     abc_algorithm = ABCAlgorithm(num_employed, num_onlookers, max_iterations)
     (
         best_solution,
