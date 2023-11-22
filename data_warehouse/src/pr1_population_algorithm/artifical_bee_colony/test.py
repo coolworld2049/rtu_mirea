@@ -17,7 +17,6 @@ class FitnessFunction:
 
 class Bee:
     def __init__(self, dim, fitness_function):
-        # Инициализация пчелы со случайной позицией и вычислением её фитнес-функции
         self.dim = dim or 2
         self.pos = [random.uniform(-5, 5) for _ in range(dim)]
         self.fitness_function = fitness_function
@@ -54,11 +53,6 @@ class ABCAlgorithm:
         self.best_fitness_values = []
 
     def run(self):
-        """
-        Использование различных типов пчёл позволяет алгоритму достичь
-        баланса между интенсивным исследованием локальных областей и способностью выхода из локальных минимумов,
-        что может быть критично для глобальной оптимизации.
-        """
         employed_bees_poss = []
         for iteration in range(self.max_iterations):
             self.employed_bees_phase()
@@ -69,6 +63,7 @@ class ABCAlgorithm:
                 bee.fitness_value / total_fitness for bee in self.employed_bees
             ]
             self.onlooker_bees_phase()
+            self.local_search_phase()  # Added local search phase
             self.scout_bees_phase()
             self.fitness_values.append(
                 [bee.fitness_value for bee in self.employed_bees]
@@ -88,14 +83,6 @@ class ABCAlgorithm:
         )
 
     def employed_bees_phase(self):
-        """
-        - Трудовые пчёлы ответственны за исследование окрестности своих
-            текущих позиций в пространстве параметров.
-        - Каждая трудовая пчела выбирает случайного соседа из числа трудовых пчёл
-            и обновляет свою позицию на основе позиции выбранной пчелы.
-        - Если новая позиция обеспечивает улучшение (меньшее значение фитнес-функции),
-            то трудовая пчела обновляет свою позицию.
-        """
         for bee in self.employed_bees:
             neighbor_bee = random.choice(self.employed_bees)
             while neighbor_bee is bee:
@@ -106,14 +93,6 @@ class ABCAlgorithm:
                 bee.update(new_pos, new_fitness)
 
     def onlooker_bees_phase(self):
-        """
-        - Наблюдатели следят за трудовыми пчёлами и выбирают пчелу для наблюдения
-            с вероятностью, пропорциональной их фитнес-значениям.
-        - Как и трудовые пчёлы, наблюдатели обновляют свои позиции,
-            основываясь на выбранной трудовой пчеле и её соседе.
-        - Так же как и в случае с трудовыми пчёлами, если новая позиция обеспечивает улучшение,
-            то наблюдатель обновляет свою позицию.
-        """
         for _ in range(self.num_onlookers):
             selected_bee = random.choices(self.employed_bees, self.probabilities)[0]
             neighbor_bee = random.choice(self.employed_bees)
@@ -125,14 +104,32 @@ class ABCAlgorithm:
                 selected_bee.update(new_pos, new_fitness)
 
     def scout_bees_phase(self):
-        """
-        - Разведчики проверяют, необходимо ли заменить текущего лучшего решение.
-        - Если какая-то трудовая пчела имеет фитнес-значение лучше, чем у текущего лучшего решения,
-            то это становится новым лучшим решением.
-        """
         for bee in self.employed_bees:
             if bee.fitness_value > self.best_solution.fitness_value:
                 self.best_solution = bee
+
+    def local_search_phase(self):
+        """
+        - Если значение приспособленности лучшего соседа меньше значения приспособленности текущей пчелы,
+            это означает, что у соседа есть лучшее решение.
+        - Новая позиция генерируется для текущей пчелы с использованием метода update_pos,
+            который корректирует позицию на основе разницы между текущей позицией и позицией лучшего соседа.
+        - Рассчитывается пригодность новой позиции.
+        - Если новая приспособленность лучше текущей,
+            положение и приспособленность пчелы обновляются.
+        """
+        for bee in self.employed_bees:
+            best_neighbor = min(
+                self.employed_bees,
+                key=lambda neighbor: self.fitness_function.rastrigin_function(
+                    neighbor.pos
+                ),
+            )
+            if best_neighbor.fitness_value < bee.fitness_value:
+                new_pos = self.update_pos(bee.pos, best_neighbor.pos)
+                new_fitness = self.fitness_function.rastrigin_function(new_pos)
+                if new_fitness < bee.fitness_value:
+                    bee.update(new_pos, new_fitness)
 
     def update_pos(self, current_pos, neighbor_pos):
         return [
@@ -144,7 +141,7 @@ class ABCAlgorithm:
 if __name__ == "__main__":
     num_employed = 40
     num_onlookers = 20
-    max_iterations = 91
+    max_iterations = 66
     abc_algorithm = ABCAlgorithm(
         num_employed=num_employed,
         num_onlookers=num_onlookers,
