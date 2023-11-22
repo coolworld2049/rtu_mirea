@@ -160,7 +160,7 @@ def visualize_shortest_path(graph, best_route):
         edgelist=best_route_edges,
         edge_color="r",
         width=1,
-        connectionstyle="arc3,rad=0.3",
+        connectionstyle="arc3,rad=0.4",
         arrowsize=15,
         arrows=True,
         arrowstyle="-|>",
