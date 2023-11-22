@@ -15,6 +15,7 @@ pyhdfs = "^0.3.1"
 faker = "^20.0.0"
 pyhive = "^0.7.0"
 numpy = "^1.26.2"
+pydantic = "^2.5.1"
 
 
 [tool.poetry.group.dev.dependencies]
