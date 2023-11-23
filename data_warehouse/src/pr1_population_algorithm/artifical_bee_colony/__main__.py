@@ -177,6 +177,9 @@ class ABCAlgorithm:
 
 
 def rastrigin_function(x, A=10):
+    """
+    Глобальный минимум в нулевой точке x=(0,0,…,0) с минимальным значением f(x)=0
+    """
     return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
 
 
