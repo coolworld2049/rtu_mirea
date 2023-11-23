@@ -1,159 +1,188 @@
 import numpy as np
-import matplotlib.pyplot as plt
-from benchmark_functions import benchmark_functions
 
 np.random.seed(42)
 
 
-class Bee:
-    def __init__(self, fitness_function, position):
-        self.position = np.array(position)
-        self.fitness_function = fitness_function
-        self.fitness = self.fitness_function(self.position)
-
-    def perturb(self, lower_bound, upper_bound, use_gaussian=True):
-        if use_gaussian:
-            perturbation = np.random.normal(0, 1, len(self.position))
-        else:
-            perturbation = np.random.uniform(-1, 1, len(self.position))
-        self.position += perturbation
-        self.position = np.clip(self.position, lower_bound, upper_bound)
-
-    def local_search(self, neighborhood_size, lower_bound, upper_bound):
-        original_position = self.position.copy()
-        for _ in range(neighborhood_size):
-            self.perturb(lower_bound, upper_bound, use_gaussian=True)
-            new_fitness = self.fitness_function(self.position)
-            if new_fitness < self.fitness:
-                self.fitness = new_fitness
-            else:
-                self.position = original_position
-
-
-class ArtificialBeeColony:
+class ABCAlgorithm:
     def __init__(
         self,
-        fitness_function,
-        lower_bound,
-        upper_bound,
-        population_size,
-        vector_dim,
-        iterations,
-        onlooker_ratio,
-        local_search_neighbors,
+        func,
+        pop_size,
+        dim,
+        li,
+        ui,
+        max_cycles,
+        abandonment_limit,
     ):
-        self.fitness_function = fitness_function
-        self.lower_bound = lower_bound
-        self.upper_bound = upper_bound
-        self.population_size = population_size
-        self.vector_dim = vector_dim
-        self.iterations = iterations
-        self.onlooker_ratio = onlooker_ratio
-        self.local_search_neighbors = local_search_neighbors
-        self.population = [
-            Bee(
-                self.fitness_function,
-                np.random.uniform(lower_bound, upper_bound, vector_dim),
-            )
-            for _ in range(population_size)
-        ]
-        self.best_solution = min(self.population, key=lambda bee: bee.fitness)
-        self.best_fitness_history = []
+        """
+        [limit] используется для отслеживания количества последовательных циклов,
+        в течение которых решение конкретной пчелы не улучшилось.
+        Помогает предотвратить застревание алгоритма в локальных оптимумах,
+        поощряя исследование новых решений, когда определенное решение
+        не улучшается в течение определенного числа циклов `abandonment_limit`
+        :param func: фитнесс функция
+        :param pop_size: размер популяции
+        :param dim: Количество переменных в векторе xm→
+        :param li: Верхняя граница
+        :param ui: Нижняя границв
+        :param max_cycles: количество повроторений
+        :param abandonment_limit: сколько последовательных циклов решение может оставаться без улучшений перед тем, как оно будет заменено.
+        """
+        self.func = func
+        self.pop_size = pop_size
+        self.dim = dim
+        self.li = li
+        self.ui = ui
+        self.max_cycles = max_cycles
+        self.abandonment_limit = abandonment_limit
+        self.population = self.initialize_population()
+        self.best_solution = None
+        self.best_fitness = float("inf")
+        self.limit = np.zeros(self.pop_size)
 
-    def run(self, verbose=0):
-        for i in range(self.iterations):
-            self.explore()
-            self.onlook()
-            self.scout()
-            self.best_solution = min(
-                self.population + [self.best_solution],
-                key=lambda bee: bee.fitness,
+    def initialize_population(self):
+        """
+        Все векторы популяции источников питания, xm→’s, инициализируются (m=1...SN, SN: размер популяции)
+        пчелами-разведчиками и задаются контрольные параметры.
+        Поскольку каждый источник пищи, xm→, является вектором решения задачи оптимизации,
+        каждый вектор xm→ содержит n переменных (xmi, i=1...n),
+        которые необходимо оптимизировать так, чтобы минимизировать целевую функцию.
+
+        Xmi=li+rand(0,1)∗(ui−li)
+        """
+        Xmi = self.li + np.random.rand(self.pop_size, self.dim) * (self.ui - self.li)
+        return Xmi
+
+    def calculate_fitness(self, solution):
+        value = self.func(solution)
+        return 1 / (1 + abs(value)) if value >= 0 else 1 + abs(value)
+
+    def employed_bees_phase(self):
+        """
+        Работающие пчелы ищут новые источники пищи (υm→), имеющие в своей памяти больше нектара
+        поблизости от источника пищи (xm→).
+        Они находят соседний источник пищи и затем оценивают его рентабельность (пригодность).
+        Например, они могут определить соседний источник пищи υm→, используя формулу, представленную уравнением (6):
+
+        υmi=xmi+ϕmi(xmi−xki)
+
+        """
+        for i in range(self.pop_size):
+            employed_bee = self.population[i, :]
+            neighbour_index = np.random.randint(0, self.pop_size)
+            phi = np.random.uniform(-1, 1)
+
+            # neighbour_bee = employed_bee + phi(employed_bee − self.population[neighbour_index, :])
+            neighbour_bee = employed_bee + phi * (
+                employed_bee - self.population[neighbour_index, :]
             )
-            self.best_fitness_history.append(self.best_solution.fitness)
-            if verbose == 1:
-                print(
-                    f"Iteration: {i}\n"
-                    f"best_solution.position: {self.best_solution.position}\t"
-                    f"best_solution.fitness: {self.best_solution.fitness}\n"
-                )
-        return (
-            self.best_solution.position,
-            self.best_solution.fitness,
-            self.best_fitness_history,
+            neighbour_bee_fitness = self.calculate_fitness(
+                neighbour_bee
+            )  # соседний источник пищи
+
+            """
+            Если пригодность соседнего решения лучше, чем у текущего решения,
+            работающая пчела принимает соседнее решение.
+            В противном случае limit для этой пчелы увеличивается.
+            """
+            if neighbour_bee_fitness < self.calculate_fitness(employed_bee):
+                self.population[i, :] = neighbour_bee
+                self.limit[i] = 0
+            else:
+                self.limit[i] += 1
+
+    def onlooker_bees_phase(self):
+        """
+        Работающие пчелы делятся информацией о своих источниках пищи с пчелами-наблюдателями, ожидающими в улье,
+        а затем пчелы-наблюдатели вероятностно выбирают источники пищи в зависимости от этой информации.
+
+        В ABC пчела-наблюдатель выбирает источник пищи в зависимости от значений вероятности,
+        рассчитанных с использованием значений приспособленности, предоставленных рабочими пчелами.
+
+        Для этой цели можно использовать метод отбора на основе приспособленности,
+        такой как метод выбора колеса рулетки (Goldberg, 1989).
+
+        Значение вероятности pm, с которым пчела-наблюдатель выбирает xm→,
+        можно рассчитать с помощью выражения, приведенного в уравнении (8):
+
+        pm=fitm(xm→)/∑m=1SNfitm(xm→)
+        """
+        fitness_values = np.array(
+            [self.calculate_fitness(bee) for bee in self.population]
         )
+        probabilities = fitness_values / np.sum(fitness_values)
 
-    def explore(self):
-        for bee in self.population:
-            original_position = bee.position.copy()
-            bee.perturb(self.lower_bound, self.upper_bound, use_gaussian=True)
-            new_fitness = bee.fitness_function(bee.position)
-            if new_fitness < bee.fitness:
-                bee.fitness = new_fitness
-                bee.local_search(
-                    self.local_search_neighbors, self.lower_bound, self.upper_bound
-                )
-            else:
-                bee.position = original_position
+        for i in range(self.pop_size):
+            chosen_index = np.random.choice(np.arange(self.pop_size), p=probabilities)
+            onlooker_bee = self.population[chosen_index, :]
+            phi = np.random.uniform(-1, 1)
+            neighbour_index = np.random.randint(0, self.pop_size)
 
-    def onlook(self):
-        def calc_select_onlooker_probs():
-            total_fitness = sum(1 / bee.fitness for bee in self.population)
-            probabilities = [
-                (1 / bee.fitness) / total_fitness for bee in self.population
-            ]
-            return probabilities
-
-        onlooker_count = int(self.onlooker_ratio * self.population_size)
-
-        for _ in range(onlooker_count):
-            selected_bee_index = np.random.choice(
-                range(self.population_size),
-                p=calc_select_onlooker_probs(),
+            # пчела-наблюдатель производит случайные изменения в своем решении,
+            # исследуя окрестности текущего решения
+            neighbour_bee = onlooker_bee + phi * (
+                onlooker_bee - self.population[neighbour_index, :]
             )
-            selected_bee = self.population[selected_bee_index]
-            original_position = selected_bee.position.copy()
+            neighbour_bee_fitness = self.calculate_fitness(neighbour_bee)
 
-            selected_bee.perturb(self.lower_bound, self.upper_bound, use_gaussian=True)
-            new_fitness = selected_bee.fitness_function(selected_bee.position)
-
-            if new_fitness < selected_bee.fitness:
-                selected_bee.fitness = new_fitness
-                selected_bee.local_search(
-                    self.local_search_neighbors, self.lower_bound, self.upper_bound
-                )
+            if neighbour_bee_fitness < self.calculate_fitness(onlooker_bee):
+                self.population[chosen_index, :] = neighbour_bee
+                self.limit[chosen_index] = 0
             else:
-                selected_bee.position = original_position
+                self.limit[chosen_index] += 1
 
-    def scout(self):
-        for bee in self.population:
-            if bee.fitness > self.best_solution.fitness:
-                bee.position = np.random.uniform(
-                    self.lower_bound, self.upper_bound, self.vector_dim
+    def scout_bees_phase(self):
+        """
+        Если limit для пчелы превышает abandonment_limit, это означает, что решение,
+        связанное с этой пчелой, не улучшалось в течение определенного количества последовательных циклов.
+        В таком случае пчела "обнуляется" и становится разведчиком,
+         и для нее генерируется новое случайное решение.
+        """
+        for i in range(self.pop_size):
+            if self.limit[i] >= self.abandonment_limit:
+                self.population[i, :] = self.li + np.random.rand(self.dim) * (
+                    self.ui - self.li
                 )
-                bee.fitness = bee.fitness_function(bee.position)
+                self.limit[i] = 0
+            else:
+                self.limit[i] += 1
+
+    def memorize_best_solution(self):
+        fitness_values = [self.calculate_fitness(bee) for bee in self.population]
+        min_index = np.argmin(fitness_values)
+        current_best_fitness = fitness_values[min_index]
+
+        if current_best_fitness < self.best_fitness:
+            self.best_solution = np.copy(self.population[min_index, :])
+            self.best_fitness = current_best_fitness
+
+    def run(self):
+        cycle = 0
+
+        while cycle < self.max_cycles:
+            self.employed_bees_phase()
+            self.onlooker_bees_phase()
+            self.scout_bees_phase()
+            self.memorize_best_solution()
+
+            print(
+                f"Cycle {cycle + 1}: Best Solution = {self.best_solution}, Best Fitness = {self.best_fitness}"
+            )
+
+            cycle += 1
 
 
-n_dimensions = 1
-fitness_function = benchmark_functions.Rastrigin(n_dimensions=n_dimensions)
-lower_bound, upper_bound = fitness_function.suggested_bounds()
+def rastring_function(x):
+    return 10 * len(x) + np.sum(x**2 - 10 * np.cos(2 * np.pi * x))
 
-abc = ArtificialBeeColony(
-    fitness_function=fitness_function,
-    lower_bound=lower_bound,
-    upper_bound=upper_bound,
-    population_size=100,
-    vector_dim=n_dimensions,
-    iterations=10,
-    onlooker_ratio=0.6,
-    local_search_neighbors=5,
+
+abc = ABCAlgorithm(
+    func=rastring_function,
+    pop_size=50,
+    dim=1,
+    li=-5,
+    ui=5,
+    max_cycles=100,
+    abandonment_limit=10,
 )
-best_position, best_fitness, best_fitness_history = abc.run(verbose=1)
-
-print("Best Position:", best_position)
-print("Best Fitness:", best_fitness)
-
-plt.plot(best_fitness_history)
-plt.xlabel("Iteration")
-plt.ylabel("Best Fitness")
-plt.title("Best Fitness History")
-plt.show()
+abc.run()
