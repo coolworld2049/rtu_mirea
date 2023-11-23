@@ -11,23 +11,13 @@ class Bee:
         self.fitness_function = fitness_function
         self.fitness = self.fitness_function(self.position)
 
-    def perturb(self, lower_bound, upper_bound, use_gaussian=True):
+    def perturb(self, lower_bound, upper_bound, scale=1.0, use_gaussian=True):
         if use_gaussian:
-            perturbation = np.random.normal(0, 1, len(self.position))
+            perturbation = np.random.normal(0, scale, len(self.position))
         else:
-            perturbation = np.random.uniform(-1, 1, len(self.position))
+            perturbation = np.random.uniform(-scale, scale, len(self.position))
         self.position += perturbation
         self.position = np.clip(self.position, lower_bound, upper_bound)
-
-    def local_search(self, neighborhood_size, lower_bound, upper_bound):
-        original_position = self.position.copy()
-        for _ in range(neighborhood_size):
-            self.perturb(lower_bound, upper_bound, use_gaussian=True)
-            new_fitness = self.fitness_function(self.position)
-            if new_fitness < self.fitness:
-                self.fitness = new_fitness
-            else:
-                self.position = original_position
 
 
 class ArtificialBeeColony:
@@ -40,8 +30,6 @@ class ArtificialBeeColony:
         vector_dim,
         iterations,
         onlooker_ratio,
-        local_search_neighbors=5,
-        acceptance_probability=0.1,
     ):
         self.fitness_function = fitness_function
         self.lower_bound = lower_bound
@@ -50,8 +38,6 @@ class ArtificialBeeColony:
         self.vector_dim = vector_dim
         self.iterations = iterations
         self.onlooker_ratio = onlooker_ratio
-        self.local_search_neighbors = local_search_neighbors
-        self.acceptance_probability = acceptance_probability
         self.population = [
             Bee(
                 self.fitness_function,
@@ -60,7 +46,7 @@ class ArtificialBeeColony:
             for _ in range(population_size)
         ]
         self.best_solution = min(self.population, key=lambda bee: bee.fitness)
-        self.best_fitness_history = []
+        self.best_fitness_history = []  # New list to store best fitness values
 
     def run(self, verbose=0):
         for i in range(self.iterations):
@@ -71,7 +57,9 @@ class ArtificialBeeColony:
                 self.population + [self.best_solution],
                 key=lambda bee: bee.fitness,
             )
-            self.best_fitness_history.append(self.best_solution.fitness)
+            self.best_fitness_history.append(
+                self.best_solution.fitness
+            )  # Store the best fitness
             if verbose == 1:
                 print(
                     f"Iteration: {i}\n"
@@ -87,13 +75,10 @@ class ArtificialBeeColony:
     def explore(self):
         for bee in self.population:
             original_position = bee.position.copy()
-            bee.perturb(self.lower_bound, self.upper_bound, use_gaussian=True)
+            bee.perturb(self.lower_bound, self.upper_bound)
             new_fitness = bee.fitness_function(bee.position)
             if new_fitness < bee.fitness:
                 bee.fitness = new_fitness
-                bee.local_search(
-                    self.local_search_neighbors, self.lower_bound, self.upper_bound
-                )
             else:
                 bee.position = original_position
 
@@ -115,18 +100,11 @@ class ArtificialBeeColony:
             selected_bee = self.population[selected_bee_index]
             original_position = selected_bee.position.copy()
 
-            selected_bee.perturb(self.lower_bound, self.upper_bound, use_gaussian=True)
+            selected_bee.perturb(self.lower_bound, self.upper_bound)
             new_fitness = selected_bee.fitness_function(selected_bee.position)
 
-            # Симуляция отжига
-            if (
-                new_fitness < selected_bee.fitness
-                or np.random.rand() < self.acceptance_probability
-            ):
+            if new_fitness < selected_bee.fitness:
                 selected_bee.fitness = new_fitness
-                selected_bee.local_search(
-                    self.local_search_neighbors, self.lower_bound, self.upper_bound
-                )
             else:
                 selected_bee.position = original_position
 
@@ -149,17 +127,16 @@ abc = ArtificialBeeColony(
     upper_bound=upper_bound,
     population_size=100,
     vector_dim=n_dimensions,
-    iterations=200,
+    iterations=10,
     onlooker_ratio=0.6,
-    acceptance_probability=0.02,
 )
 best_position, best_fitness, best_fitness_history = abc.run(verbose=1)
-
-print("Best Position:", best_position)
-print("Best Fitness:", best_fitness)
 
 plt.plot(best_fitness_history)
 plt.xlabel("Iteration")
 plt.ylabel("Best Fitness")
 plt.title("Best Fitness History")
 plt.show()
+
+print("Best Position:", best_position)
+print("Best Fitness:", best_fitness)
