@@ -7,7 +7,7 @@ class ABCAlgorithm:
     def __init__(
         self,
         func,
-        pop_size,
+        colony_size,
         dim,
         li,
         ui,
@@ -21,7 +21,7 @@ class ABCAlgorithm:
         поощряя исследование новых решений, когда определенное решение
         не улучшается в течение определенного числа циклов `abandonment_limit`
         :param func: фитнесс функция
-        :param pop_size: размер популяции
+        :param colony_size: размер популяции
         :param dim: Количество переменных в векторе xm→
         :param li: Верхняя граница
         :param ui: Нижняя границв
@@ -29,7 +29,7 @@ class ABCAlgorithm:
         :param abandonment_limit: сколько последовательных циклов решение может оставаться без улучшений перед тем, как оно будет заменено.
         """
         self.func = func
-        self.pop_size = pop_size
+        self.colony_size = colony_size
         self.dim = dim
         self.li = li
         self.ui = ui
@@ -38,7 +38,7 @@ class ABCAlgorithm:
         self.population = self.initialize_population()
         self.best_solution = None
         self.best_fitness = float("inf")
-        self.limit = np.zeros(self.pop_size)
+        self.limit = np.zeros(self.colony_size)
 
     def initialize_population(self):
         """
@@ -50,7 +50,7 @@ class ABCAlgorithm:
 
         Xmi=li+rand(0,1)∗(ui−li)
         """
-        Xmi = self.li + np.random.rand(self.pop_size, self.dim) * (self.ui - self.li)
+        Xmi = self.li + np.random.rand(self.colony_size, self.dim) * (self.ui - self.li)
         return Xmi
 
     def calculate_fitness(self, solution):
@@ -67,28 +67,14 @@ class ABCAlgorithm:
         υmi=xmi+ϕmi(xmi−xki)
 
         """
-        for i in range(self.pop_size):
+        for i in range(self.colony_size):
             employed_bee = self.population[i, :]
-            neighbour_index = np.random.randint(0, self.pop_size)
+            neighbour_index = np.random.randint(0, self.colony_size)
             phi = np.random.uniform(-1, 1)
-
-            """
-            neighbour_bee = employed_bee + phi(employed_bee − self.population[neighbour_index, :])
-            
-            Где population[neighbour_index, :] - решение, найденное соседней пчелой.
-            """
             neighbour_bee = employed_bee + phi * (
                 employed_bee - self.population[neighbour_index, :]
             )
-            neighbour_bee_fitness = self.calculate_fitness(
-                neighbour_bee
-            )  # соседний источник пищи
-
-            """
-            Если пригодность соседнего решения лучше, чем у текущего решения,
-            работающая пчела принимает соседнее решение.
-            В противном случае limit для этой пчелы увеличивается.
-            """
+            neighbour_bee_fitness = self.calculate_fitness(neighbour_bee)
             if neighbour_bee_fitness < self.calculate_fitness(employed_bee):
                 self.population[i, :] = neighbour_bee
                 self.limit[i] = 0
@@ -116,14 +102,13 @@ class ABCAlgorithm:
         )
         probabilities = fitness_values / np.sum(fitness_values)
 
-        for i in range(self.pop_size):
-            chosen_index = np.random.choice(np.arange(self.pop_size), p=probabilities)
+        for i in range(self.colony_size):
+            chosen_index = np.random.choice(
+                np.arange(self.colony_size), p=probabilities
+            )
             onlooker_bee = self.population[chosen_index, :]
             phi = np.random.uniform(-1, 1)
-            neighbour_index = np.random.randint(0, self.pop_size)
-
-            # пчела-наблюдатель производит случайные изменения в своем решении,
-            # исследуя окрестности текущего решения
+            neighbour_index = np.random.randint(0, self.colony_size)
             neighbour_bee = onlooker_bee + phi * (
                 onlooker_bee - self.population[neighbour_index, :]
             )
@@ -142,7 +127,7 @@ class ABCAlgorithm:
         В таком случае пчела "обнуляется" и становится разведчиком,
         и для нее генерируется новое случайное решение.
         """
-        for i in range(self.pop_size):
+        for i in range(self.colony_size):
             if self.limit[i] >= self.abandonment_limit:
                 self.population[i, :] = self.li + np.random.rand(self.dim) * (
                     self.ui - self.li
@@ -185,7 +170,7 @@ def rastrigin_function(x, A=10):
 
 abc = ABCAlgorithm(
     func=rastrigin_function,
-    pop_size=50,
+    colony_size=50,
     dim=1,
     li=-5.12,
     ui=5.12,
