@@ -1,33 +1,43 @@
+from typing import Callable
+
 import numpy as np
+
+np.random.seed(42)
 
 
 class Bee:
-    def __init__(self, position):
+    def __init__(self, fitness_function: Callable, position):
         self.position = np.array(position)  # xi
-        self.fitness = self.evaluate_fitness()
+        self.fitness_function = fitness_function
+        self.fitness = self.fitness_function(self.position)
 
-    def evaluate_fitness(self):
-        # Оценка пригодности каждой позиции с использованием функции Растригина
-        A = 10
-        fitness = A * len(self.position) + np.sum(
-            self.position**2 - A * np.cos(2 * np.pi * self.position)
-        )
-        return fitness
-
-    def perturb(self):
+    def perturb(self, lower_bound, upper_bound):
         # Внесение возмущения в позицию пчелы для создания новой позиции (vi)
-        new_position = np.random.uniform(-1, 1, len(self.position))  # vi
-        self.position += new_position
+        perturbation = np.random.uniform(-1, 1, len(self.position))
+        self.position += perturbation
+        self.position = np.clip(self.position, lower_bound, upper_bound)
 
 
 class ArtificialBeeColony:
-    def __init__(self, population_size, vector_dim, iterations, onlooker_ratio):
+    def __init__(
+        self,
+        fitness_function,
+        lower_bound,
+        upper_bound,
+        population_size,
+        vector_dim,
+        iterations,
+        onlooker_ratio,
+    ):
+        self.fitness_function = fitness_function
+        self.lower_bound = lower_bound
+        self.upper_bound = upper_bound
         self.population_size = population_size
         self.vector_dim = vector_dim
         self.iterations = iterations
         self.onlooker_ratio = onlooker_ratio
         self.population = [
-            Bee(np.random.uniform(-5.12, 5.12, vector_dim))
+            Bee(self.fitness_function, np.random.uniform(-5.12, 5.12, vector_dim))
             for _ in range(population_size)
         ]
         self.best_solution = min(self.population, key=lambda bee: bee.fitness)
@@ -52,8 +62,8 @@ class ArtificialBeeColony:
     def explore(self):
         for bee in self.population:
             original_position = bee.position.copy()
-            bee.perturb()
-            new_fitness = bee.evaluate_fitness()
+            bee.perturb(self.lower_bound, self.upper_bound)
+            new_fitness = bee.fitness_function(bee.position)
             if new_fitness < bee.fitness:
                 bee.fitness = new_fitness
             else:
@@ -79,8 +89,8 @@ class ArtificialBeeColony:
             selected_bee = self.population[selected_bee_index]
             original_position = selected_bee.position.copy()
 
-            selected_bee.perturb()
-            new_fitness = selected_bee.evaluate_fitness()
+            selected_bee.perturb(self.lower_bound, self.upper_bound)
+            new_fitness = selected_bee.fitness_function(selected_bee.position)
 
             if new_fitness < selected_bee.fitness:
                 selected_bee.fitness = new_fitness
@@ -91,14 +101,25 @@ class ArtificialBeeColony:
         for bee in self.population:
             if bee.fitness > self.best_solution.fitness:
                 bee.position = np.random.uniform(-5.12, 5.12, self.vector_dim)
-                bee.fitness = bee.evaluate_fitness()
+                bee.fitness = bee.fitness_function(bee.position)
+
+
+def rastring_function(position):
+    A = 10
+    fitness = A * len(position) + np.sum(
+        position**2 - A * np.cos(2 * np.pi * position)
+    )
+    return fitness
 
 
 abc = ArtificialBeeColony(
-    population_size=50,
-    vector_dim=2,
-    iterations=100,
-    onlooker_ratio=0.5,
+    fitness_function=rastring_function,
+    lower_bound=-5.12,
+    upper_bound=5.12,
+    population_size=100,
+    vector_dim=1,
+    iterations=10,
+    onlooker_ratio=0.6,
 )
 best_position, best_fitness = abc.run(verbose=1)
 print("Best Position:", best_position)
