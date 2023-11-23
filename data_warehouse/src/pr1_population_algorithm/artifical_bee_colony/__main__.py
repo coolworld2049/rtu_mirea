@@ -151,7 +151,7 @@ abc = ArtificialBeeColony(
     vector_dim=n_dimensions,
     iterations=200,
     onlooker_ratio=0.6,
-    acceptance_probability=0.02,
+    acceptance_probability=0.01,
 )
 best_position, best_fitness, best_fitness_history = abc.run(verbose=1)
 
