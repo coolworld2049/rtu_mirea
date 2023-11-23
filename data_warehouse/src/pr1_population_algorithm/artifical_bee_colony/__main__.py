@@ -174,7 +174,7 @@ abc = ABCAlgorithm(
     dim=1,
     li=-5.12,
     ui=5.12,
-    max_cycles=100,
+    max_cycles=10,
     abandonment_limit=10,
 )
 abc.run()
