@@ -72,7 +72,11 @@ class ABCAlgorithm:
             neighbour_index = np.random.randint(0, self.pop_size)
             phi = np.random.uniform(-1, 1)
 
-            # neighbour_bee = employed_bee + phi(employed_bee − self.population[neighbour_index, :])
+            """
+            neighbour_bee = employed_bee + phi(employed_bee − self.population[neighbour_index, :])
+            
+            Где population[neighbour_index, :] - решение, найденное соседней пчелой.
+            """
             neighbour_bee = employed_bee + phi * (
                 employed_bee - self.population[neighbour_index, :]
             )
