@@ -176,16 +176,16 @@ class ABCAlgorithm:
             cycle += 1
 
 
-def rastring_function(x):
-    return 10 * len(x) + np.sum(x**2 - 10 * np.cos(2 * np.pi * x))
+def rastrigin_function(x, A=10):
+    return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
 
 
 abc = ABCAlgorithm(
-    func=rastring_function,
+    func=rastrigin_function,
     pop_size=50,
     dim=1,
-    li=-5,
-    ui=5,
+    li=-5.12,
+    ui=5.12,
     max_cycles=100,
     abandonment_limit=10,
 )
