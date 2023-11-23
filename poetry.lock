@@ -12,6 +12,21 @@ files = [
 ]
 
 [[package]]
+name = "benchmark-functions"
+version = "1.1.3"
+description = "A benchmark functions collection wrote in Python 3, suited for assessing the performances of optimisation problems on deterministic functions."
+optional = false
+python-versions = "*"
+files = [
+    {file = "benchmark_functions-1.1.3-py3-none-any.whl", hash = "sha256:0f35c5563c731cb02294b7e027a344ac5a5b35fd6862f0b35ca2fa330e60b4f9"},
+    {file = "benchmark_functions-1.1.3.tar.gz", hash = "sha256:23e1c2dc98df3f5badb37f1422277e7c41c043b8f51a04111b39f82607170e86"},
+]
+
+[package.dependencies]
+numpy = "*"
+packaging = "*"
+
+[[package]]
 name = "black"
 version = "23.11.0"
 description = "The uncompromising code formatter."
@@ -978,4 +993,4 @@ dev = ["black (>=19.3b0)", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.9,<3.12"
-content-hash = "068487b025b8aeb2eee4cdd6150baf4a4d5c9307b3ea5689343581516287278b"
+content-hash = "d8831bf14649acf9b75558205c6f5ace74a8b3a2d688d1a813dbda04e41b26ab"

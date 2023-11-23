@@ -73,11 +73,11 @@ class NaiveBayesModel:
         for word in words:
             spam_score += math.log(self.word_probabilities["spam"].get(word, 1e-10))
             ham_score += math.log(self.word_probabilities["ham"].get(word, 1e-10))
-            if spam_score > ham_score and word in self.spam_words:
+            if spam_score > ham_score or word in self.spam_words:
                 text_spam_words.add(word)
 
         spam_percentage = (
-            round((len(text_spam_words) / len(words)) * 100, 2)
+            round((len(text_spam_words) / len(words)) * 100, 1)
             if len(text_spam_words) > 0
             else None
         )
@@ -121,8 +121,14 @@ if __name__ == "__main__":
 
     print("Prediction:\n")
     predictions = []
+    spam_count = 0
+    not_spam_count = 0
     for m_i, text in enumerate(test_texts):
         result, spam_words, spam_percent = model.predict(text)
+        if result == "spam":
+            spam_count += 1
+        elif result == "ham":
+            not_spam_count += 1
         words = model.get_words(text)
         if spam_words:
             words = [
@@ -144,6 +150,10 @@ if __name__ == "__main__":
             f"Spam words: {spam_words if len(spam_words) > 0 else ''}\n"
         )
         predictions.append(result)
+
+    print(
+        f"Total Spam Messages: {spam_count}\nTotal Not Spam Messages: {not_spam_count}\n"
+    )
 
     true_labels = test_df["class"].tolist()
     accuracy = calculate_accuracy(predictions, true_labels)

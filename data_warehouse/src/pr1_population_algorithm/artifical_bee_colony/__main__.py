@@ -1,166 +1,105 @@
-import math
-import random
-
-from loguru import logger
-
-random.seed(42)
-
-
-class FitnessFunction:
-    @staticmethod
-    def rastrigin_function(x):
-        A = 10
-        return A * len(x) + sum(
-            [(val**2 - A * math.cos(2 * math.pi * val)) for val in x]
-        )
+import numpy as np
 
 
 class Bee:
-    def __init__(self, dim, fitness_function):
-        # Инициализация пчелы со случайной позицией и вычислением её фитнес-функции
-        self.dim = dim or 2
-        self.pos = [random.uniform(-5, 5) for _ in range(dim)]
-        self.fitness_function = fitness_function
-        self.fitness_value = fitness_function.rastrigin_function(self.pos)
+    def __init__(self, position):
+        self.position = np.array(position)  # xi
+        self.fitness = self.evaluate_fitness()
 
-    def update(self, new_pos, new_fitness_value):
-        self.pos = new_pos
-        self.fitness_value = new_fitness_value
-
-    def generate_random_pos(self):
-        return [random.uniform(-5, 5) for _ in range(self.dim)]
-
-
-class ABCAlgorithm:
-    def __init__(
-        self,
-        num_employed,
-        num_onlookers,
-        max_iterations,
-        fitness_function,
-        dim=2,
-    ):
-        self.fitness_function = fitness_function
-        self.probabilities = None
-        self.num_employed = num_employed
-        self.num_onlookers = num_onlookers
-        self.max_iterations = max_iterations
-        self.dim = dim
-        self.employed_bees = [
-            Bee(dim, self.fitness_function) for _ in range(num_employed)
-        ]
-        self.best_solution = min(self.employed_bees, key=lambda bee: bee.fitness_value)
-        self.fitness_values = []
-        self.best_fitness_values = []
-
-    def run(self):
-        """
-        Использование различных типов пчёл позволяет алгоритму достичь
-        баланса между интенсивным исследованием локальных областей и способностью выхода из локальных минимумов,
-        что может быть критично для глобальной оптимизации.
-        """
-        employed_bees_poss = []
-        for iteration in range(self.max_iterations):
-            self.employed_bees_phase()
-            employed_bees_poss.append([bee.pos for bee in self.employed_bees])
-
-            total_fitness = sum(bee.fitness_value for bee in self.employed_bees)
-            self.probabilities = [
-                bee.fitness_value / total_fitness for bee in self.employed_bees
-            ]
-            self.onlooker_bees_phase()
-            self.scout_bees_phase()
-            self.fitness_values.append(
-                [bee.fitness_value for bee in self.employed_bees]
-            )
-            self.best_fitness_values.append(
-                (self.best_solution.pos, self.best_solution.fitness_value)
-            )
-            logger.info(
-                f"Iteration {iteration}: Best Fitness = {self.best_solution.fitness_value}"
-            )
-
-        return (
-            self.best_solution,
-            self.fitness_values,
-            self.best_fitness_values,
-            employed_bees_poss,
+    def evaluate_fitness(self):
+        # Оценка пригодности каждой позиции с использованием функции Растригина
+        A = 10
+        fitness = A * len(self.position) + np.sum(
+            self.position**2 - A * np.cos(2 * np.pi * self.position)
         )
+        return fitness
 
-    def employed_bees_phase(self):
-        """
-        - Трудовые пчёлы ответственны за исследование окрестности своих
-            текущих позиций в пространстве параметров.
-        - Каждая трудовая пчела выбирает случайного соседа из числа трудовых пчёл
-            и обновляет свою позицию на основе позиции выбранной пчелы.
-        - Если новая позиция обеспечивает улучшение (меньшее значение фитнес-функции),
-            то трудовая пчела обновляет свою позицию.
-        """
-        for bee in self.employed_bees:
-            neighbor_bee = random.choice(self.employed_bees)
-            while neighbor_bee is bee:
-                neighbor_bee = random.choice(self.employed_bees)
-            new_pos = self.update_pos(bee.pos, neighbor_bee.pos)
-            new_fitness = self.fitness_function.rastrigin_function(new_pos)
-            if new_fitness < bee.fitness_value:
-                bee.update(new_pos, new_fitness)
+    def perturb(self):
+        # Внесение возмущения в позицию пчелы для создания новой позиции (vi)
+        new_position = np.random.uniform(-1, 1, len(self.position))  # vi
+        self.position += new_position
 
-    def onlooker_bees_phase(self):
-        """
-        - Наблюдатели следят за трудовыми пчёлами и выбирают пчелу для наблюдения
-            с вероятностью, пропорциональной их фитнес-значениям.
-        - Как и трудовые пчёлы, наблюдатели обновляют свои позиции,
-            основываясь на выбранной трудовой пчеле и её соседе.
-        - Так же как и в случае с трудовыми пчёлами, если новая позиция обеспечивает улучшение,
-            то наблюдатель обновляет свою позицию.
-        """
-        for _ in range(self.num_onlookers):
-            selected_bee = random.choices(self.employed_bees, self.probabilities)[0]
-            neighbor_bee = random.choice(self.employed_bees)
-            while neighbor_bee is selected_bee:
-                neighbor_bee = random.choice(self.employed_bees)
-            new_pos = self.update_pos(selected_bee.pos, neighbor_bee.pos)
-            new_fitness = self.fitness_function.rastrigin_function(new_pos)
-            if new_fitness < selected_bee.fitness_value:
-                selected_bee.update(new_pos, new_fitness)
 
-    def scout_bees_phase(self):
-        """
-        - Разведчики проверяют, необходимо ли заменить текущего лучшего решение.
-        - Если какая-то трудовая пчела имеет фитнес-значение лучше, чем у текущего лучшего решения,
-            то это становится новым лучшим решением.
-        """
-        for bee in self.employed_bees:
-            if bee.fitness_value > self.best_solution.fitness_value:
-                self.best_solution = bee
-
-    def update_pos(self, current_pos, neighbor_pos):
-        return [
-            current_pos[i] + random.uniform(-1, 1) * (current_pos[i] - neighbor_pos[i])
-            for i in range(self.dim)
+class ArtificialBeeColony:
+    def __init__(self, population_size, vector_dim, iterations, onlooker_ratio):
+        self.population_size = population_size
+        self.vector_dim = vector_dim
+        self.iterations = iterations
+        self.onlooker_ratio = onlooker_ratio
+        self.population = [
+            Bee(np.random.uniform(-5.12, 5.12, vector_dim))
+            for _ in range(population_size)
         ]
+        self.best_solution = min(self.population, key=lambda bee: bee.fitness)
+
+    def run(self, verbose=0):
+        for i in range(self.iterations):
+            self.explore()
+            self.onlook()
+            self.scout()
+            self.best_solution = min(
+                self.population + [self.best_solution],
+                key=lambda bee: bee.fitness,
+            )
+            if verbose == 1:
+                print(
+                    f"Iteration: {i}\n"
+                    f"best_solution.position: {self.best_solution.position}\t"
+                    f"best_solution.fitness: {self.best_solution.fitness}\n"
+                )
+        return self.best_solution.position, self.best_solution.fitness
+
+    def explore(self):
+        for bee in self.population:
+            original_position = bee.position.copy()
+            bee.perturb()
+            new_fitness = bee.evaluate_fitness()
+            if new_fitness < bee.fitness:
+                bee.fitness = new_fitness
+            else:
+                bee.position = original_position
+
+    def onlook(self):
+        def calc_select_onlooker_probs():
+            total_fitness = sum(1 / bee.fitness for bee in self.population)
+            probabilities = [
+                (1 / bee.fitness) / total_fitness for bee in self.population
+            ]
+            return probabilities
+
+        # Наблюдение за пчелами среди пчел-наблюдателей
+        onlooker_count = int(self.onlooker_ratio * self.population_size)
+
+        for _ in range(onlooker_count):
+            # Расчет вероятности выбора пчелы-наблюдателя
+            selected_bee_index = np.random.choice(
+                range(self.population_size),
+                p=calc_select_onlooker_probs(),
+            )
+            selected_bee = self.population[selected_bee_index]
+            original_position = selected_bee.position.copy()
+
+            selected_bee.perturb()
+            new_fitness = selected_bee.evaluate_fitness()
+
+            if new_fitness < selected_bee.fitness:
+                selected_bee.fitness = new_fitness
+            else:
+                selected_bee.position = original_position
+
+    def scout(self):
+        for bee in self.population:
+            if bee.fitness > self.best_solution.fitness:
+                bee.position = np.random.uniform(-5.12, 5.12, self.vector_dim)
+                bee.fitness = bee.evaluate_fitness()
 
 
-if __name__ == "__main__":
-    num_employed = 40
-    num_onlookers = 20
-    max_iterations = 91
-    abc_algorithm = ABCAlgorithm(
-        num_employed=num_employed,
-        num_onlookers=num_onlookers,
-        max_iterations=max_iterations,
-        fitness_function=FitnessFunction(),
-        dim=2,
-    )
-    (
-        best_solution,
-        fitness_values,
-        best_fitness_values,
-        employed_bees_poss,
-    ) = abc_algorithm.run()
-
-    logger.info(
-        f"Best solution found at pos {best_solution.pos} with fitness {best_solution.fitness_value}"
-    )
-
-    iterations = list(range(max_iterations))
+abc = ArtificialBeeColony(
+    population_size=50,
+    vector_dim=2,
+    iterations=100,
+    onlooker_ratio=0.5,
+)
+best_position, best_fitness = abc.run(verbose=1)
+print("Best Position:", best_position)
+print("Best Fitness:", best_fitness)
