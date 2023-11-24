@@ -27,23 +27,37 @@ class NaturalSelector:
         )
 
 
-class CrossoverOperator:
+class OrderCrossover:
     @staticmethod
     def crossover(X, Y):
         start, end = sorted(random.sample(range(len(X)), 2))
-        children = X[start:end]
-        for city in Y:
-            if city not in children:
-                children.append(city)
-        return children[start:] + children[:start]
+
+        # Подстрока между выбранными позициями от первого родителя к дочернему элементу.
+        child = [None] * len(X)
+        X_subset = X[start:end]
+        child[start:end] = X_subset
+
+        # Fill in the remaining positions in the child with elements from the second parent
+        idx = end
+        Y_head = Y[end:]
+        Y_tail = Y[:end]
+        Y_subset = Y_head + Y_tail
+        for city in Y_subset:
+            if None in child:
+                if city not in child:
+                    child_idx = idx % len(X)
+                    child[child_idx] = city
+                    idx += 1
+
+        return child
 
 
 class MutationOperator:
     @staticmethod
-    def mutate(individual):
-        idx1, idx2 = random.sample(range(len(individual)), 2)
-        individual[idx1], individual[idx2] = individual[idx2], individual[idx1]
-        return individual
+    def mutate(individ):
+        idx1, idx2 = random.sample(range(len(individ)), 2)
+        individ[idx1], individ[idx2] = individ[idx2], individ[idx1]
+        return individ
 
 
 class GeneticAlgorithm:
@@ -109,13 +123,13 @@ if __name__ == "__main__":
 
     genetic_algorithm = GeneticAlgorithm(
         selector=natural_selector,
-        crossover_operator=CrossoverOperator(),
+        crossover_operator=OrderCrossover(),
         mutation_operator=MutationOperator(),
     )
 
     population = genetic_algorithm.run(
         pop_size=100,
-        generations=1000,
+        generations=30,
         crossover_rate=0.9,
         mutation_rate=0.1,
         graph=G,

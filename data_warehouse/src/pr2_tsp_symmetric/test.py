@@ -1,132 +1,142 @@
 import random
+import copy
+from abc import ABC, abstractmethod
 import numpy as np
-from loguru import logger
-
-random.seed(42)
 
 
-def calculate_distance(adj_matrix, route):
-    distance = 0
-    for i in range(len(route) - 1):
-        distance += adj_matrix[route[i], route[i + 1]]
-    distance += adj_matrix[route[-1], route[0]]
-    return distance
+class City:
+    def __init__(self, index, x, y):
+        self.index = index
+        self.x = x
+        self.y = y
 
 
-class NaturalSelector:
-    def __init__(self, tournament_size):
-        self.tournament_size = tournament_size
-
-    def select_parents(self, population):
-        tournament = random.sample(population, self.tournament_size)
-        return min(
-            tournament,
-            key=lambda item: item[1],  # Compare routes based on their weights
-        )
+class MutationStrategy(ABC):
+    @abstractmethod
+    def mutate(self, route):
+        pass
 
 
-class CrossoverOperator:
-    @staticmethod
-    def crossover(X, Y):
-        start, end = sorted(random.sample(range(len(X[0])), 2))
-        child_route = np.zeros_like(X[0])
-        child_route[start:end] = X[0, start:end]
-        missing_cities = [city for city in Y[0] if city not in child_route]
-        child_route[end:] = missing_cities + X[0, :start] + X[0, end:]
-        child_weight = (X[1] + Y[1]) / 2  # Take the average of the weights
-        return np.array([child_route, child_weight])
+class CrossoverStrategy(ABC):
+    @abstractmethod
+    def crossover(self, parent1, parent2):
+        pass
 
 
-class MutationOperator:
-    @staticmethod
-    def mutate(individual):
-        route, weight = individual
-        idx1, idx2 = random.sample(range(len(route)), 2)
-        route[idx1], route[idx2] = route[idx2], route[idx1]
-        return np.array([route, weight])
+class ExchangeMutation(MutationStrategy):
+    def mutate(self, route):
+        new_route = route.copy()
+        index1, index2 = random.sample(range(len(route)), 2)
+        new_route[index1], new_route[index2] = new_route[index2], new_route[index1]
+        return new_route
+
+
+class PartiallyMappedCrossover(CrossoverStrategy):
+    def crossover(self, parent1, parent2):
+        point1, point2 = sorted(random.sample(range(len(parent1)), 2))
+
+        offspring = [None] * len(parent1)
+        offspring[point1:point2] = parent1[point1:point2]
+
+        for i in range(len(parent2)):
+            if point1 <= i < point2:
+                continue
+
+            gene = parent2[i]
+
+            while gene in offspring[point1:point2]:
+                index = parent2.index(gene)
+                gene = parent2[index]
+
+            offspring[i] = gene
+
+        return offspring
 
 
 class GeneticAlgorithm:
     def __init__(
         self,
-        selector,
-        crossover_operator,
-        mutation_operator,
+        population_size,
+        generations,
+        mutation_rate,
+        mutation_strategy,
+        crossover_strategy,
     ):
-        self.selector = selector
-        self.crossover_operator = crossover_operator
-        self.mutation_operator = mutation_operator
+        self.population_size = population_size
+        self.generations = generations
+        self.mutation_rate = mutation_rate
+        self.mutation_strategy = mutation_strategy
+        self.crossover_strategy = crossover_strategy
 
-    def run(self, pop_size, generations, crossover_rate, mutation_rate, adj_matrix):
-        population = []
+    def run_genetic_algorithm(self):
+        population = [
+            City(i, np.random.randint(1, 10), np.random.uniform(-1, 1))
+            for i in range(population_size)
+        ]
+        for _ in range(self.generations):
+            population = sorted(population, key=lambda x: x[1])
 
-        for _ in range(pop_size):
-            route = np.random.permutation(len(adj_matrix))
-            weight = (
-                np.sum(adj_matrix[route[:-1], route[1:]])
-                + adj_matrix[route[-1], route[0]]
-            )
-            population.append([route, weight])  # Don't convert to NumPy array here
-
-        for g in range(generations):
             new_population = []
+            for _ in range(self.population_size // 2):
+                parent1 = self.tournament_selection(population)
+                parent2 = self.tournament_selection(population)
+                child1 = self.crossover_strategy.crossover(parent1[0], parent2[0])
+                child2 = self.crossover_strategy.crossover(parent2[0], parent1[0])
+                new_population.extend([(child1, 0), (child2, 0)])
 
-            for p in range(pop_size // 2):
-                X = self.selector.select_parents(population)
-                Y = self.selector.select_parents(population)
+            for i in range(self.population_size):
+                if random.random() < self.mutation_rate:
+                    new_population[i] = (
+                        self.mutation_strategy.mutate(new_population[i][0]),
+                        0,
+                    )
 
-                child = (
-                    self.crossover_operator.crossover(X, Y)
-                    if random.random() < crossover_rate
-                    else X
-                )
+            population = [
+                (route, self.calculate_total_distance(route))
+                for route, _ in new_population
+            ]
 
-                if random.random() < mutation_rate:
-                    new_population.extend([self.mutation_operator.mutate(child)])
-                else:
-                    new_population.extend([child])
+        return min(population, key=lambda x: x[1])[0]
 
-            population = new_population
-            best_route = min(
-                population,
-                key=lambda item: item[1],  # Find the route with the minimum weight
-            )
-            logger.info(
-                f"Generation: {g}. Best route: {best_route[0]}. Weight: {best_route[1]}"
-            )
+    def generate_random_route(self):
+        route = copy.deepcopy(self.city_list)
+        random.shuffle(route)
+        return route
 
-        return population
+    def calculate_total_distance(self, route):
+        total_distance = 0
+        for i in range(len(route) - 1):
+            total_distance += self.calculate_distance(route[i], route[i + 1])
+        total_distance += self.calculate_distance(route[-1], route[0])
+        return total_distance
+
+    @staticmethod
+    def calculate_distance(city1, city2):
+        return ((city1.x - city2.x) ** 2 + (city1.y - city2.y) ** 2) ** 0.5
+
+    @staticmethod
+    def tournament_selection(population, k=3):
+        tournament = random.sample(population, k)
+        return min(tournament, key=lambda x: x[1])
 
 
 if __name__ == "__main__":
-    cities_count = 10
-    adjacency_matrix = np.random.randint(1, 10, size=(cities_count, cities_count))
+    population_size = 10
+    generations = 100
+    mutation_rate = 0.2
 
-    natural_selector = NaturalSelector(
-        tournament_size=3,
-    )
+    mutation_strategy = ExchangeMutation()
+    crossover_strategy = PartiallyMappedCrossover()
 
     genetic_algorithm = GeneticAlgorithm(
-        selector=natural_selector,
-        crossover_operator=CrossoverOperator(),
-        mutation_operator=MutationOperator(),
+        population_size,
+        generations,
+        mutation_rate,
+        mutation_strategy,
+        crossover_strategy,
     )
 
-    population = genetic_algorithm.run(
-        pop_size=100,
-        generations=1000,
-        crossover_rate=0.9,
-        mutation_rate=0.1,
-        adj_matrix=adjacency_matrix,
-    )
+    best_route = genetic_algorithm.run_genetic_algorithm()
 
-    best_route = min(
-        population,
-        key=lambda item: item[1],  # Find the route with the minimum weight
-    )
-    best_route_nodes = best_route[0]
-    best_route_total_distance = best_route[1]
-
-    logger.info(f"Adjacency Matrix:\n{adjacency_matrix}")
-    logger.info(f"Best Route: {best_route_nodes}")
-    logger.info(f"Total Distance: {best_route_total_distance}")
+    print("Best Route:", [city.index for city in best_route])
+    print("Total Distance:", genetic_algorithm.calculate_total_distance(best_route))
