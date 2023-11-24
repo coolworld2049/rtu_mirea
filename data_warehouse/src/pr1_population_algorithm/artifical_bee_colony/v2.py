@@ -8,14 +8,14 @@ class ABCAlgorithm:
         self,
         func,
         colony_size,
-        employed_ratio,
-        onlooker_ratio,
-        scout_ratio,
         dim,
         li,
         ui,
         max_cycles,
         abandonment_limit,
+        number_of_employed,  # Количество работающих пчел
+        onlookers,  # Количество пчел-наблюдателей
+        scouts,  # Количество разведчиков
     ):
         """
         [limit] используется для отслеживания количества последовательных циклов,
@@ -27,20 +27,23 @@ class ABCAlgorithm:
         :param colony_size: размер популяции
         :param dim: Количество переменных в векторе xm→
         :param li: Верхняя граница
-        :param ui: Нижняя границв
-        :param max_cycles: количество повроторений
+        :param ui: Нижняя граница
+        :param max_cycles: количество повторений
         :param abandonment_limit: сколько последовательных циклов решение может оставаться без улучшений перед тем, как оно будет заменено.
+        :param number_of_employed: Количество работающих пчел
+        :param onlookers: Количество пчел-наблюдателей
+        :param scouts: Количество разведчиков
         """
         self.func = func
         self.colony_size = colony_size
-        self.employed_num = int(colony_size * employed_ratio)
-        self.onlooker_num = int(colony_size * onlooker_ratio)
-        self.scout_num = int(colony_size * scout_ratio)
         self.dim = dim
         self.li = li
         self.ui = ui
         self.max_cycles = max_cycles
         self.abandonment_limit = abandonment_limit
+        self.number_of_employed = number_of_employed
+        self.onlookers = onlookers
+        self.scouts = scouts
         self.population = self.initialize_population()
         self.best_solution = None
         self.best_fitness = float("inf")
@@ -73,7 +76,7 @@ class ABCAlgorithm:
         υmi=xmi+ϕmi(xmi−xki)
 
         """
-        for i in range(self.colony_size):
+        for i in range(min(self.number_of_employed, self.colony_size)):
             employed_bee = self.population[i, :]
             neighbour_index = np.random.randint(0, self.colony_size)
             phi = np.random.uniform(-1, 1)
@@ -108,7 +111,7 @@ class ABCAlgorithm:
         )
         probabilities = fitness_values / np.sum(fitness_values)
 
-        for i in range(self.colony_size):
+        for i in range(self.onlookers):  # Изменено на количество пчел-наблюдателей
             chosen_index = np.random.choice(
                 np.arange(self.colony_size), p=probabilities
             )
@@ -133,7 +136,7 @@ class ABCAlgorithm:
         В таком случае пчела "обнуляется" и становится разведчиком,
         и для нее генерируется новое случайное решение.
         """
-        for i in range(self.colony_size):
+        for i in range(self.scouts):  # Изменено на количество разведчиков
             if self.limit[i] >= self.abandonment_limit:
                 self.population[i, :] = self.li + np.random.rand(self.dim) * (
                     self.ui - self.li
@@ -174,16 +177,17 @@ def rastrigin_function(x, A=10):
     return A * len(x) + np.sum(x**2 - A * np.cos(2 * np.pi * x))
 
 
+# Изменено на 50 работающих пчел, 20 пчел-наблюдателей и 10 разведчиков
 abc = ABCAlgorithm(
     func=rastrigin_function,
     colony_size=20,
-    employed_ratio=0.5,
-    onlooker_ratio=0.5,
-    scout_ratio=0.2,
     dim=10,
     li=-600,
     ui=600,
-    max_cycles=15,
-    abandonment_limit=4,
+    max_cycles=14,
+    abandonment_limit=10,
+    number_of_employed=25,
+    onlookers=25,
+    scouts=1,
 )
 abc.run()
