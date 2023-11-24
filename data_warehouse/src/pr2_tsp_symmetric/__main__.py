@@ -46,7 +46,7 @@ class OrderCrossover:
             if None in child:
                 if city not in child:
                     child_idx = idx % len(X)
-                    child[child_idx] = city
+                    child[idx % len(X)] = city
                     idx += 1
 
         return child
@@ -112,7 +112,7 @@ class GeneticAlgorithm:
 
 
 if __name__ == "__main__":
-    cities_count = 10
+    cities_count = 20
     G: Graph = nx.complete_graph(range(cities_count))
     for edge in G.edges():
         G.edges[edge]["weight"] = random.randint(1, cities_count)
@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
     population = genetic_algorithm.run(
         pop_size=100,
-        generations=30,
+        generations=1000,
         crossover_rate=0.9,
         mutation_rate=0.1,
         graph=G,
