@@ -32,7 +32,7 @@ echo "Setting up Hadoop environment variables..."
 {
   echo "JAVA_HOME=$JAVA_HOME"
   echo "HADOOP_HOME=$HADOOP_HOME"
-  echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin:"
+  echo "PATH=\$PATH:\$JAVA_HOME/bin:\$HADOOP_HOME/bin"
   echo "export JAVA_HOME"
   echo "export HADOOP_HOME"
   echo "export PATH"
@@ -104,8 +104,17 @@ sudo bash -c "cat > $HADOOP_HOME/etc/hadoop/yarn-site.xml <<EOL
     <name>yarn.resourcemanager.resource-tracker.address</name>
     <value>127.0.0.1:8031</value>
   </property>
+  <property>
+    <name>yarn.nodemanager.pmem-check-enabled</name>
+    <value>false</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.vmem-check-enabled</name>
+    <value>false</value>
+  </property>
 </configuration>
 EOL"
 echo "Hadoop yarn-site.xml configured successfully."
 
 echo "Hadoop $HADOOP_VERSION has been installed to $HADOOP_HOME."
+echo "Make sure to start a new terminal or run 'source ~/.bashrc' to apply the changes."

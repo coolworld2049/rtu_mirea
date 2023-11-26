@@ -16,6 +16,7 @@ faker = "^20.0.0"
 pyhive = "^0.7.0"
 numpy = "^1.26.2"
 pydantic = "^2.5.1"
+graphframes = "^0.6"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -26,9 +27,12 @@ pygame = "^2.5.2"
 
 [tool.poetry.group.big_data.dependencies]
 mrjob = "^0.7.4"
-
-
-[tool.poetry.group.data_warehouse-dev.dependencies]
+matplotlib = "^3.8.2"
+networkx = "^3.2.1"
+plotly = "^5.18.0"
+pandas = "^2.1.3"
+pyspark = "^3.5.0"
+graphframes = "^0.6"
 
 
 [tool.poetry.group.data_warehouse.dependencies]
