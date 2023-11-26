@@ -1,163 +1,146 @@
 import random
+
 import networkx as nx
 from loguru import logger
-from matplotlib import pyplot as plt
+from networkx import Graph
 
 random.seed(42)
 
 
-class DistanceCalculator:
-    def __init__(self, graph):
-        self.graph = graph
+def calculate_distance(graph, route):
+    distance = graph.edges[route[-1], route[0]]["weight"]
+    for i in range(len(route) - 1):
+        weight = graph.edges[route[i], route[i + 1]]["weight"]
+        distance += weight
+    return distance
 
-    def calculate_distance(self, route):
-        return (
-            sum(
-                self.graph.edges[route[i], route[i + 1]]["weight"]
-                for i in range(len(route) - 1)
-            )
-            + self.graph.edges[route[-1], route[0]]["weight"]
+
+class NaturalSelector:
+    def __init__(self, tournament_size):
+        self.tournament_size = tournament_size
+
+    def select_parents(self, population, graph):
+        tournament = random.sample(population, self.tournament_size)
+        return min(
+            tournament,
+            key=lambda route: calculate_distance(graph, route),
         )
 
 
-class RouteInitializer:
-    def __init__(self, graph):
-        self.graph = graph
+class OrderCrossover:
+    @staticmethod
+    def crossover(X, Y):
+        start, end = sorted(random.sample(range(len(X)), 2))
 
-    def initialize_route(self):
-        route = list(self.graph.nodes)
-        random.shuffle(route)
-        return route
+        # Подстрока между выбранными позициями от первого родителя к дочернему элементу.
+        child = [None] * len(X)
+        X_subset = X[start:end]
+        child[start:end] = X_subset
 
+        # Fill in the remaining positions in the child with elements from the second parent
+        idx = end
+        Y_head = Y[end:]
+        Y_tail = Y[:end]
+        Y_subset = Y_head + Y_tail
+        for city in Y_subset:
+            if None in child:
+                if city not in child:
+                    child_idx = idx % len(X)
+                    child[idx % len(X)] = city
+                    idx += 1
 
-class ParentSelector:
-    def __init__(self, tournament_size, distance_calculator):
-        self.tournament_size = tournament_size
-        self.distance_calculator = distance_calculator
-
-    def select_parents(self, population):
-        tournament = random.sample(population, self.tournament_size)
-        return min(tournament, key=self.distance_calculator.calculate_distance)
-
-
-class CrossoverOperator:
-    def crossover(self, parent1, parent2):
-        size = len(parent1)
-        start, end = sorted(random.sample(range(size), 2))
-        temp = parent1[start:end] + [
-            city for city in parent2 if city not in parent1[start:end]
-        ]
-        return temp[start:] + temp[:start]
+        return child
 
 
 class MutationOperator:
-    def mutate(self, individual):
-        idx1, idx2 = random.sample(range(len(individual)), 2)
-        individual[idx1], individual[idx2] = individual[idx2], individual[idx1]
-        return individual
+    @staticmethod
+    def mutate(individ):
+        idx1, idx2 = random.sample(range(len(individ)), 2)
+        individ[idx1], individ[idx2] = individ[idx2], individ[idx1]
+        return individ
 
 
 class GeneticAlgorithm:
     def __init__(
         self,
-        population_initializer,
-        parent_selector,
+        selector,
         crossover_operator,
         mutation_operator,
-        distance_calculator,
     ):
-        self.population_initializer = population_initializer
-        self.parent_selector = parent_selector
+        self.selector = selector
         self.crossover_operator = crossover_operator
         self.mutation_operator = mutation_operator
-        self.distance_calculator = distance_calculator
 
-    def run(self, pop_size, generations, crossover_prob, mutation_prob):
-        population = [
-            self.population_initializer.initialize_route() for _ in range(pop_size)
-        ]
+    def run(self, pop_size, generations, crossover_rate, mutation_rate, graph):
+        population = []
 
-        for _ in range(generations):
+        for _ in range(pop_size):
+            route = list(graph.nodes)
+            random.shuffle(route)
+            population.append(route)
+
+        for g in range(generations):
             new_population = []
 
-            for _ in range(pop_size // 2):
-                parent1 = self.parent_selector.select_parents(population)
-                parent2 = self.parent_selector.select_parents(population)
+            for p in range(pop_size // 2):
+                X = self.selector.select_parents(population, graph)
+                Y = self.selector.select_parents(population, graph)
 
-                child1 = (
-                    self.crossover_operator.crossover(parent1, parent2)
-                    if random.random() < crossover_prob
-                    else parent1[:]
+                XY = (
+                    self.crossover_operator.crossover(X, Y)
+                    if random.random() < crossover_rate
+                    else X
                 )
-                child2 = (
-                    self.crossover_operator.crossover(parent2, parent1)
-                    if random.random() < crossover_prob
-                    else parent2[:]
+                YX = (
+                    self.crossover_operator.crossover(Y, X)
+                    if random.random() < crossover_rate
+                    else Y
                 )
-
-                new_population.extend(
-                    [
-                        self.mutation_operator.mutate(child)
-                        if random.random() < mutation_prob
-                        else child[:]
-                        for child in [child1, child2]
-                    ]
-                )
-
+                for child in [XY, YX]:
+                    if random.random() < mutation_rate:
+                        new_population.extend([self.mutation_operator.mutate(child)])
+                    else:
+                        new_population.extend([child])
             population = new_population
+            best_route = min(
+                population,
+                key=lambda route: calculate_distance(G, route),
+            )
+            logger.info(f"Generation: {g}. Best route: {best_route}")
 
-        best_route = min(population, key=self.distance_calculator.calculate_distance)
-        return best_route
-
-
-# Create a random graph representing cities and distances
-G = nx.complete_graph(10)
-for edge in G.edges():
-    G.edges[edge]["weight"] = random.randint(1, 10)
-
-# Create instances of the classes
-distance_calculator = DistanceCalculator(G)
-route_initializer = RouteInitializer(G)
-parent_selector = ParentSelector(
-    tournament_size=3, distance_calculator=distance_calculator
-)
-crossover_operator = CrossoverOperator()
-mutation_operator = MutationOperator()
-
-# Create an instance of the GeneticAlgorithm
-genetic_algorithm = GeneticAlgorithm(
-    population_initializer=route_initializer,
-    parent_selector=parent_selector,
-    crossover_operator=crossover_operator,
-    mutation_operator=mutation_operator,
-    distance_calculator=distance_calculator,
-)
-
-# Run the genetic algorithm
-best_route = genetic_algorithm.run(
-    pop_size=100, generations=1000, crossover_prob=0.7, mutation_prob=0.2
-)
-
-logger.info(f"Best Route: {best_route}")
-logger.info(f"Total Distance: {distance_calculator.calculate_distance(best_route)}")
+        return population
 
 
-def visualize_best_route(graph, best_route):
-    pos = nx.spring_layout(graph)
-    nx.draw(graph, pos, with_labels=True)
+if __name__ == "__main__":
+    cities_count = 20
+    G: Graph = nx.complete_graph(range(cities_count))
+    for edge in G.edges():
+        G.edges[edge]["weight"] = random.randint(1, cities_count)
 
-    best_route_edges = [
-        (best_route[i], best_route[i + 1]) for i in range(len(best_route) - 1)
-    ]
-    best_route_edges.append(
-        (best_route[-1], best_route[0])
-    )  # Connect the last and first nodes
-    nx.draw_networkx_edges(
-        graph, pos, edgelist=best_route_edges, edge_color="r", width=2
+    natural_selector = NaturalSelector(
+        tournament_size=3,
     )
 
-    plt.title("Best Route Visualization")
-    plt.show()
+    genetic_algorithm = GeneticAlgorithm(
+        selector=natural_selector,
+        crossover_operator=OrderCrossover(),
+        mutation_operator=MutationOperator(),
+    )
 
+    population = genetic_algorithm.run(
+        pop_size=100,
+        generations=1000,
+        crossover_rate=0.9,
+        mutation_rate=0.1,
+        graph=G,
+    )
 
-visualize_best_route(G, best_route)
+    best_route = min(
+        population,
+        key=lambda route: calculate_distance(G, route),
+    )
+    best_route_total_distance = calculate_distance(G, best_route)
+
+    logger.info(f"Edges: {G.edges}")
+    logger.info(f"Best Route: {best_route}")
+    logger.info(f"Total Distance: {best_route_total_distance}")
