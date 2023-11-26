@@ -1,11 +1,14 @@
 from pyspark.sql import SparkSession
 
-from pr5_tweets.rdd_sparksql.query.env import dataset_path
-from pr5_tweets.rdd_sparksql.query.const import politicians, russia_country_names
+from pr5_tweets.spark.env import spark_work_dir
+from pr5_tweets.rdd_sparksql.rf_user_who_often_mentions.const import (
+    politicians,
+    russia_country_names,
+)
 
 with SparkSession.builder.getOrCreate() as spark:
     df = spark.read.csv(
-        f"{dataset_path}/ira_tweets_csv_hashed.csv",
+        f"{spark_work_dir}/ira_tweets_csv_hashed.csv",
         header=True,
         inferSchema=True,
     )
