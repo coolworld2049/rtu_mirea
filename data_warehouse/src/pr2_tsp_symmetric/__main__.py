@@ -13,10 +13,10 @@ class DistanceCalculator:
     def calculate_distance(self, route):
         return (
             sum(
-                self.graph.edges[route[i], route[i + 1]]["weight"]
+                self.graph.edges_df[route[i], route[i + 1]]["weight"]
                 for i in range(len(route) - 1)
             )
-            + self.graph.edges[route[-1], route[0]]["weight"]
+            + self.graph.edges_df[route[-1], route[0]]["weight"]
         )
 
 
@@ -112,8 +112,8 @@ class GeneticAlgorithm:
 
 # Create a random graph representing cities and distances
 G = nx.complete_graph(10)
-for edge in G.edges():
-    G.edges[edge]["weight"] = random.randint(1, 10)
+for edge in G.edges_df():
+    G.edges_df[edge]["weight"] = random.randint(1, 10)
 
 # Create instances of the classes
 distance_calculator = DistanceCalculator(G)

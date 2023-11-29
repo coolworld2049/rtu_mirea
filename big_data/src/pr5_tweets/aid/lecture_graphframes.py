@@ -6,8 +6,10 @@ from pr5_tweets.spark.base import get_spark_session
 
 spark = get_spark_session()
 
-df = (
-    spark.read.csv("file:///home/ivanovnp/tweets/ira_tweets_csv_hashed.csv", inferSchema=True, header=True)
+df = spark.read.csv(
+    "file:///home/ivanovnp/tweets/ira_tweets_csv_hashed.csv",
+    inferSchema=True,
+    header=True,
 )
 
 # Создадим представление tw над DataFrame df.
