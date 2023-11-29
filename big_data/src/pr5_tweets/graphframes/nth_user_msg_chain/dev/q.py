@@ -19,74 +19,72 @@ selected_cols = [
     "userid",
     "in_reply_to_tweetid",
     "in_reply_to_userid",
-    "retweet_userid",
-    "retweet_tweetid",
+    # "retweet_userid",
+    # "retweet_tweetid",
     "reply_count",
 ]
-df = df.select(*selected_cols).filter(
-    "in_reply_to_tweetid is null or in_reply_to_tweetid RLIKE '^\\\d{18}$'"
+df = (
+    df.select(*selected_cols)
+    .filter(
+        "in_reply_to_tweetid is null or in_reply_to_tweetid RLIKE '^\\\d{18}$'"  # noqa
+    )
+    .filter("in_reply_to_userid is not null")
 )
 logger.info("df")
 df.show()
 
-vertices = df.selectExpr("tweetid as id").distinct()
+vertices = df.withColumnRenamed("tweetid", "id")
 logger.info("vertices")
-vertices.show(4)
+vertices.show(5)
 
-edges = df.selectExpr(
-    "tweetid as src",
-    "in_reply_to_tweetid as dst",
-    "in_reply_to_userid",
-    "userid",
-    "reply_count",
+edges = df.selectExpr("tweetid as src", "in_reply_to_tweetid as dst", "userid").filter(
+    "src is not null and dst is not null"
 )
 logger.info("edges")
-edges.show(4)
+edges.show(5)
 
 g = GraphFrame(vertices, edges)
 
-in_degree = g.inDegrees.filter("inDegree != 0 and id is not null").orderBy(F.desc("inDegree"))
+in_degree = g.inDegrees.filter("inDegree != 0 and id is not null").orderBy(
+    F.desc("inDegree")
+)
 logger.info("inDegree")
 in_degree.show()
 
 user_started_chain = (
-    in_degree
-    .join(vertices, "id").withColumnRenamed("id", "src")
+    in_degree.join(vertices, "id")
+    .withColumnRenamed("id", "src")
     .join(edges, "src")
-    .filter("src is not null and dst is not null and reply_count > 0")
     .orderBy(F.desc("inDegree"))
 )
 logger.info("user_started_chain")
 user_started_chain.show()
 
-user_started_chain_user_id = user_started_chain.take(1)[0]["userid"]
-logger.info(f"user_started_chain_user_id: {user_started_chain_user_id}")
-
 nth_chain = 1
-filtered_user_started_chain = user_started_chain.filter(
-    F.col("userid") == user_started_chain_user_id
-)
-filtered_user_started_chain_max = (
-    filtered_user_started_chain.groupBy("inDegree", "userid")
-    .count().sort("inDegree")
+target_user_id = user_started_chain.take(nth_chain)[0]["userid"]
+logger.info(f"user_started_chain_user_id: {target_user_id}")
+
+target_user_chain = user_started_chain.filter(F.col("userid") == target_user_id)
+target_user_chain_max = (
+    target_user_chain.groupBy("inDegree", "userid")
+    .count()
+    .sort("inDegree")
     .orderBy(F.desc("count"))
 )
-logger.info("filtered_user_started_chain_max")
-filtered_user_started_chain_max.show()
+logger.info("target_user_chain_max")
+target_user_chain_max.show()
 
-filtered_user_started_chain = filtered_user_started_chain.filter(
-    F.col("inDegree") == filtered_user_started_chain_max.take(1)[0]["inDegree"]
+target_user_chain = target_user_chain.filter(
+    F.col("inDegree") == target_user_chain_max.take(nth_chain)[0]["inDegree"]
 )
-logger.info(
-    f"filtered_user_started_chain - count: {filtered_user_started_chain.count()}"
-)
-filtered_user_started_chain.show()
+logger.info(f"target_user_chain - count: {target_user_chain.count()}")
+target_user_chain.show()
 
 plt.figure(figsize=(20, 20), dpi=100)
 
 nx_graph = nx.MultiDiGraph()
 
-for row in filtered_user_started_chain.collect():
+for row in target_user_chain.collect():
     nx_graph.add_node(row["src"])
     nx_graph.add_node(row["dst"])
     # nx_graph.add_node(row["userid"], color="blue")
