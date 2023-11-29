@@ -26,17 +26,24 @@ class NaiveBayesModel:
     }
 
     def __init__(self):
+        # Вероятности классов ("spam" и "ham")
         self.class_probabilities = defaultdict(float)
+
+        # Вероятности слов для каждого класса
         self.word_probabilities = defaultdict(lambda: defaultdict(float))
+
+        # Множество слов, которые являются характерными для спама
         self.spam_words = set()
 
     def train(self, training_data):
         total_count = len(training_data)
         spam_count = sum(training_data["class"] == "spam")
 
+        # Рассчитываем вероятности классов
         self.class_probabilities["spam"] = spam_count / total_count
         self.class_probabilities["ham"] = (total_count - spam_count) / total_count
 
+        # Считаем количество вхождений каждого слова в спам и не спам
         spam_words = defaultdict(int)
         ham_words = defaultdict(int)
 
@@ -52,13 +59,14 @@ class NaiveBayesModel:
                 else:
                     ham_words[word] += 1
 
+        # Рассчитываем вероятности слов для каждого класса
         for word in set(spam_words.keys()).union(set(ham_words.keys())):
             self.word_probabilities["spam"][word] = (spam_words[word] + 1) / (
                 spam_count + 2
-            )
+            )  # Pr(W|S)
             self.word_probabilities["ham"][word] = (ham_words[word] + 1) / (
                 (total_count - spam_count) + 2
-            )
+            )  # Pr(W|H)
 
     @staticmethod
     def get_words(text):
@@ -71,13 +79,18 @@ class NaiveBayesModel:
         text_spam_words = set()
 
         for word in words:
+            # Рассчитываем вероятности слов для спама и не спама по формуле Байеса
             spam_score += math.log(self.word_probabilities["spam"].get(word, 1e-10))
             ham_score += math.log(self.word_probabilities["ham"].get(word, 1e-10))
-            if spam_score > ham_score and word in self.spam_words:
+
+            # Если вероятность спама больше, чем вероятность не спама, или слово является характерным для спама,
+            # добавляем слово в множество характерных для спама слов
+            if spam_score > ham_score or word in self.spam_words:
                 text_spam_words.add(word)
 
+        # Рассчитываем процент характерных для спама слов в тексте
         spam_percentage = (
-            round((len(text_spam_words) / len(words)) * 100, 2)
+            round((len(text_spam_words) / len(words)) * 100, 1)
             if len(text_spam_words) > 0
             else None
         )
@@ -121,8 +134,14 @@ if __name__ == "__main__":
 
     print("Prediction:\n")
     predictions = []
+    spam_count = 0
+    not_spam_count = 0
     for m_i, text in enumerate(test_texts):
         result, spam_words, spam_percent = model.predict(text)
+        if result == "spam":
+            spam_count += 1
+        elif result == "ham":
+            not_spam_count += 1
         words = model.get_words(text)
         if spam_words:
             words = [
@@ -144,6 +163,10 @@ if __name__ == "__main__":
             f"Spam words: {spam_words if len(spam_words) > 0 else ''}\n"
         )
         predictions.append(result)
+
+    print(
+        f"Total Spam Messages: {spam_count}\nTotal Not Spam Messages: {not_spam_count}\n"
+    )
 
     true_labels = test_df["class"].tolist()
     accuracy = calculate_accuracy(predictions, true_labels)
