@@ -75,7 +75,7 @@ if __name__ == "__main__":
     y = data.iloc[:, -1].values
 
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.5, random_state=42
+        X, y, test_size=0.3, random_state=42
     )
 
     data_normalizer = DataNormalizer()
@@ -83,7 +83,6 @@ if __name__ == "__main__":
         X_train, X_test
     )
 
-    # Инициализация и обучение модели логистической регрессии
     logistic_regression = LogisticRegression()
     X_train_normalized = np.c_[
         np.ones((X_train_normalized.shape[0], 1)), X_train_normalized
