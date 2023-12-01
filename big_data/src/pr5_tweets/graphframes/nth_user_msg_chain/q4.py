@@ -45,13 +45,15 @@ edges.show(4)
 
 g = GraphFrame(vertices, edges)
 
-in_degree = g.inDegrees.filter("inDegree != 0 and id is not null").orderBy(F.desc("inDegree"))
+in_degree = g.inDegrees.filter("inDegree != 0 and id is not null").orderBy(
+    F.desc("inDegree")
+)
 logger.info("inDegree")
 in_degree.show()
 
 user_started_chain = (
-    in_degree
-    .join(vertices, "id").withColumnRenamed("id", "src")
+    in_degree.join(vertices, "id")
+    .withColumnRenamed("id", "src")
     .join(edges, "src")
     .filter("src is not null and dst is not null and reply_count > 0")
     .orderBy(F.desc("inDegree"))
@@ -68,7 +70,8 @@ filtered_user_started_chain = user_started_chain.filter(
 )
 filtered_user_started_chain_max = (
     filtered_user_started_chain.groupBy("inDegree", "userid")
-    .count().sort("inDegree")
+    .count()
+    .sort("inDegree")
     .orderBy(F.desc("count"))
 )
 logger.info("filtered_user_started_chain_max")

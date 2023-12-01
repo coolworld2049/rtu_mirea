@@ -1,119 +1,79 @@
+import pathlib
+
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+from sklearn.feature_selection import SelectKBest
+from sklearn.feature_selection import chi2
+import seaborn as sns
+
+data = pd.read_csv(pathlib.Path(__file__).parent.parent.joinpath("input/diabetes.csv"))
+
+sns.heatmap(data.corr(method="spearman"), annot=True)
+
+X = data.drop("Outcome", axis=1)
+y = data["Outcome"]
+
+# Шаг 1: Разбиение выборки на обучающую и тестовую
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 
-class DataNormalizer:
-    @staticmethod
-    def normalize_data(X_train, X_test):
-        scaler = StandardScaler()
-        X_train_normalized = scaler.fit_transform(X_train)
-        X_test_normalized = scaler.transform(X_test)
-        return X_train_normalized, X_test_normalized
-
-    @staticmethod
-    def remove_features(data, to_drop):
-        return data[:, [col for col in range(data.shape[1]) if col not in to_drop]]
+# Шаг 2: Реализация логистической регрессии с использованием градиентного спуска
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
 
 
-class LogisticRegression:
-    @staticmethod
-    def sigmoid(z):
-        return 1 / (1 + np.exp(-z))
+def gradient_descent(X, y, theta, learning_rate, iterations):
+    m = len(y)
 
-    @staticmethod
-    def cost_function(X, y, theta):
-        m = len(y)
-        h = LogisticRegression.sigmoid(X.dot(theta))
-        cost = (1 / m) * (-y.dot(np.log(h)) - (1 - y).dot(np.log(1 - h)))
-        return cost
+    for _ in range(iterations):
+        h = sigmoid(np.dot(X, theta))
+        gradient = np.dot(X.T, (h - y)) / m
+        theta -= learning_rate * gradient
 
-    @staticmethod
-    def gradient_descent(X, y, theta, learning_rate, iterations):
-        m = len(y)
-        cost_history = np.zeros(iterations)
-
-        for i in range(iterations):
-            gradient = X.T.dot(LogisticRegression.sigmoid(X.dot(theta)) - y) / m
-            theta = theta - learning_rate * gradient
-            cost_history[i] = LogisticRegression.cost_function(X, y, theta)
-
-        return theta, cost_history
-
-    @staticmethod
-    def predict(X, theta):
-        return LogisticRegression.sigmoid(X.dot(theta))
-
-    @staticmethod
-    def accuracy(y_true, y_pred):
-        y_pred_class = (y_pred >= 0.5).astype(int)
-        return np.mean(y_true == y_pred_class)
+    return theta
 
 
-class FeatureSelector:
-    @staticmethod
-    def select_features(data, threshold=0.8):
-        correlation_matrix = data.corr().abs()
-        upper_triangle: DataFrame = correlation_matrix.where(
-            np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool_)
-        )
-        to_drop = [
-            column
-            for column in upper_triangle.columns
-            if any(upper_triangle[column] > threshold)
-        ]
-        return to_drop
+# Добавим столбец единиц к матрице признаков для учета свободного члена
+X_train = np.c_[np.ones((X_train.shape[0], 1)), X_train]
+X_test = np.c_[np.ones((X_test.shape[0], 1)), X_test]
 
+# Инициализация параметров и обучение модели
+theta = np.zeros(X_train.shape[1])
+learning_rate = 0.01
+iterations = 1000
 
-if __name__ == "__main__":
-    file_path = "../input/diabetes.csv"
-    data = pd.read_csv(file_path)
+theta = gradient_descent(X_train, y_train, theta, learning_rate, iterations)
 
-    X = data.iloc[:, :-1].values
-    y = data.iloc[:, -1].values
+# Шаг 3: Предсказание на тестовой выборке
+predictions = sigmoid(np.dot(X_test, theta))
+predicted_labels = (predictions >= 0.5).astype(int)
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.3, random_state=42
-    )
+# Вычисление точности классификации
+accuracy = accuracy_score(y_test, predicted_labels)
+print(f"Точность классификации: {accuracy * 100:.2f}%")
 
-    data_normalizer = DataNormalizer()
-    X_train_normalized, X_test_normalized = data_normalizer.normalize_data(
-        X_train, X_test
-    )
+# Шаг 4: Применение отбора признаков на основе корреляции
+# Выберем 5 наилучших признаков
+best_features = SelectKBest(score_func=chi2, k=5)
+X_new = best_features.fit_transform(X, y)
 
-    logistic_regression = LogisticRegression()
-    X_train_normalized = np.c_[
-        np.ones((X_train_normalized.shape[0], 1)), X_train_normalized
-    ]
-    theta, cost_history = logistic_regression.gradient_descent(
-        X_train_normalized, y_train, np.zeros(X_train_normalized.shape[1]), 0.01, 1000
-    )
+# Разбиение нового признакового пространства
+X_train_new, X_test_new, _, _ = train_test_split(
+    X_new, y, test_size=0.2, random_state=42
+)
 
-    # Выбор признаков на основе корреляции
-    feature_selector = FeatureSelector()
-    to_drop = feature_selector.select_features(data, threshold=0.4)
+# Инициализация и обучение новой модели на выбранных признаках
+model_new = LogisticRegression()
+model_new.fit(X_train_new, y_train)
 
-    # Удаление выбранных признаков из обучающей и тестовой выборок
-    X_train_selected = data_normalizer.remove_features(X_train_normalized, to_drop)
-    X_test_selected = data_normalizer.remove_features(X_test_normalized, to_drop)
+# Предсказание на тестовой выборке
+predicted_labels_new = model_new.predict(X_test_new)
 
-    # Обучение модели логистической регрессии на выбранных признаках
-    theta_selected, _ = logistic_regression.gradient_descent(
-        X_train_selected, y_train, np.zeros(X_train_selected.shape[1]), 0.01, 1000
-    )
-
-    # Прогнозирование на обучающей и тестовой выборках
-    y_train_pred = logistic_regression.predict(X_train_selected, theta_selected)
-    y_test_pred = logistic_regression.predict(
-        np.c_[np.ones((X_test_selected.shape[0], 1)), X_test_selected], theta_selected
-    )
-
-    # Оценка точности модели
-    accuracy_train = logistic_regression.accuracy(y_train, y_train_pred)
-    accuracy_test = logistic_regression.accuracy(y_test, y_test_pred)
-
-    # Вывод результатов
-    print(f"Точность на обучающей выборке: {accuracy_train}")
-    print(f"Точность на тестовой выборке: {accuracy_test}")
+# Вычисление точности новой модели
+accuracy_new = accuracy_score(y_test, predicted_labels_new)
+print(f"Точность классификации с отбором признаков: {accuracy_new * 100:.2f}%")
