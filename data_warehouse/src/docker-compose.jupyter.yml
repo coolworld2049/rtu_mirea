@@ -5,10 +5,8 @@ services:
     image: jupyter/minimal-notebook
     container_name: jupyter_notebook
     volumes:
-      - ./pr3_logistic_regression/input:/home/jovyan/pr3_logistic_regression/input
-      - ./pr3_logistic_regression/notebooks:/home/jovyan/pr3_logistic_regression
-      - ./pr5_semantic_search/notebooks:/home/jovyan/pr5_semantic_search
-      - ./pr5_semantic_search/input:/home/jovyan/pr5_semantic_search/input
+      - ./pr3_logistic_regression:/home/jovyan/pr3_logistic_regression
+      - ./pr5_semantic_search:/home/jovyan/pr5_semantic_search
     ports:
       - "8888:8888"
     environment:
