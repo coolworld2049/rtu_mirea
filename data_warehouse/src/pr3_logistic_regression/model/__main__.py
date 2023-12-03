@@ -1,7 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+import plotly.express as px
 
 
 class LogisticRegression:
@@ -10,7 +12,8 @@ class LogisticRegression:
         self.iterations = iterations
         self.theta = None
 
-    def sigmoid(self, z):
+    @staticmethod
+    def sigmoid(z):
         return 1 / (1 + np.exp(-z))
 
     def fit(self, X, y):
@@ -27,38 +30,43 @@ class LogisticRegression:
         return (self.sigmoid(X @ self.theta) >= threshold).astype(int)
 
 
-def select_features(data):
-    correlation_matrix = data.corr()
-    return (
-        correlation_matrix["Outcome"]
-        .abs()
-        .sort_values(ascending=False)[1:3]
-        .index.tolist()
-    )
+def preprocess_data(df):
+    X = StandardScaler().fit_transform(df.drop("Outcome", axis=1))
+    return train_test_split(X, df["Outcome"], test_size=0.2, random_state=42)
 
 
-def preprocess_data(data):
-    X = StandardScaler().fit_transform(data.drop("Outcome", axis=1))
-    return train_test_split(X, data["Outcome"], test_size=0.2, random_state=42)
-
-
-def train_and_evaluate(model, X_train, X_test, y_train, y_test):
+def train_and_evaluate(model: LogisticRegression, X_train, X_test, y_train, y_test):
     model.fit(X_train, y_train)
-    accuracy = np.mean(model.predict(X_test) == y_test)
-    print(f"Test Accuracy: {accuracy * 100:.2f}%")
+    y_pred = model.predict(X_test)
+    print(f"Test Accuracy: {np.mean(y_test == y_pred) * 100:.2f}%\n")
+    print(f"classification_report\n")
+    print(classification_report(y_test, y_pred))
 
 
 if __name__ == "__main__":
-    file_path = "../input/diabetes.csv"
-    data = pd.read_csv(file_path)
+    df = pd.read_csv("../input/diabetes.csv")
 
-    # Train and evaluate logistic regression model
-    X_train, X_test, y_train, y_test = preprocess_data(data)
+    correlation_matrix = df.corr()
+    fig = px.imshow(
+        correlation_matrix,
+        labels=dict(x="Features", y="Features", color="Correlation"),
+        x=correlation_matrix.columns,
+        y=correlation_matrix.columns,
+        color_continuous_scale="Viridis",
+    )
+    fig.update_layout(title="Correlation Matrix Heatmap", width=800, height=600)
+    # fig.show()
+
+    print("Train and evaluate logistic regression model\n")
+    X_train, X_test, y_train, y_test = preprocess_data(df)
     logistic_model = LogisticRegression()
     train_and_evaluate(logistic_model, X_train, X_test, y_train, y_test)
 
-    # Train and evaluate logistic regression model with selected features
-    selected_features = select_features(data)
-    X_new, _, y_new, _ = preprocess_data(data[selected_features + ["Outcome"]])
-    logistic_model_new = LogisticRegression()
-    train_and_evaluate(logistic_model_new, X_new, X_new, y_new, y_new)
+    print("Train and evaluate logistic regression model with selected features\n")
+    drop_columns = ["BloodPressure", "SkinThickness", "BMI", "Insulin"]
+    data_v2 = df.drop(drop_columns, axis="columns")
+    X_train_v2, X_test_v2, y_train_v2, y_test_v2 = preprocess_data(data_v2)
+    logistic_model_v2 = LogisticRegression()
+    train_and_evaluate(
+        logistic_model_v2, X_train_v2, X_train_v2, y_train_v2, y_train_v2
+    )
