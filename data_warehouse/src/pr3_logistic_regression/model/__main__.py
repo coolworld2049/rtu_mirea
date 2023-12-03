@@ -58,15 +58,9 @@ if __name__ == "__main__":
     # fig.show()
 
     print("Train and evaluate logistic regression model\n")
-    X_train, X_test, y_train, y_test = preprocess_data(df)
-    logistic_model = LogisticRegression()
-    train_and_evaluate(logistic_model, X_train, X_test, y_train, y_test)
+    train_and_evaluate(LogisticRegression(), *preprocess_data(df))
 
     print("Train and evaluate logistic regression model with selected features\n")
     drop_columns = ["BloodPressure", "SkinThickness", "BMI", "Insulin"]
-    data_v2 = df.drop(drop_columns, axis="columns")
-    X_train_v2, X_test_v2, y_train_v2, y_test_v2 = preprocess_data(data_v2)
-    logistic_model_v2 = LogisticRegression()
-    train_and_evaluate(
-        logistic_model_v2, X_train_v2, X_train_v2, y_train_v2, y_train_v2
-    )
+    clean_df = df.drop(drop_columns, axis="columns")
+    train_and_evaluate(LogisticRegression(), *preprocess_data(clean_df))
