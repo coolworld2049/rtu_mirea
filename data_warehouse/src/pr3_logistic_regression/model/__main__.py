@@ -120,11 +120,6 @@ if __name__ == "__main__":
         ),
         *preprocess_data(df),
     )
-    print("\n1.1.SGDClassifier")
-    train_and_evaluate(
-        linear_model.SGDClassifier(**sgd_model_kwargs),
-        *preprocess_data(df),
-    )
 
     print("\n2.LogisticRegression with selected features")
     drop_columns = [
@@ -138,10 +133,5 @@ if __name__ == "__main__":
             alpha=alpha,
             convergence_threshold=convergence_threshold,
         ),
-        *preprocess_data(clean_df),
-    )
-    print("\n2.1.SGDClassifier")
-    train_and_evaluate(
-        linear_model.SGDClassifier(**sgd_model_kwargs),
         *preprocess_data(clean_df),
     )
