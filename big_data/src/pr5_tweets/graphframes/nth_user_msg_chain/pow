@@ -1,0 +1,181 @@
+/home/ivanovnp/.cache/pypoetry/virtualenvs/rtu-mirea-lgc4TVed-py3.11/bin/python3.11 /home/ivanovnp/rtu_mirea/big_data/src/pr5_tweets/graphframes/nth_user_msg_chain/__main__.py
+23/12/08 00:30:48 WARN Utils: Your hostname, ivanovnp-bigdata resolves to a loopback address: 127.0.1.1; using 192.168.71.129 instead (on interface ens33)
+23/12/08 00:30:48 WARN Utils: Set SPARK_LOCAL_IP if you need to bind to another address
+:: loading settings :: url = jar:file:/home/ivanovnp/.cache/pypoetry/virtualenvs/rtu-mirea-lgc4TVed-py3.11/lib/python3.11/site-packages/pyspark/jars/ivy-2.5.1.jar!/org/apache/ivy/core/settings/ivysettings.xml
+Ivy Default Cache set to: /home/ivanovnp/.ivy2/cache
+The jars for the packages stored in: /home/ivanovnp/.ivy2/jars
+graphframes#graphframes added as a dependency
+:: resolving dependencies :: org.apache.spark#spark-submit-parent-e68434d5-d90b-4b31-9022-1fce2bd94101;1.0
+	confs: [default]
+	found graphframes#graphframes;0.8.3-spark3.5-s_2.12 in spark-packages
+	found org.slf4j#slf4j-api;1.7.16 in central
+:: resolution report :: resolve 137ms :: artifacts dl 8ms
+	:: modules in use:
+	graphframes#graphframes;0.8.3-spark3.5-s_2.12 from spark-packages in [default]
+	org.slf4j#slf4j-api;1.7.16 from central in [default]
+	---------------------------------------------------------------------
+	|                  |            modules            ||   artifacts   |
+	|       conf       | number| search|dwnlded|evicted|| number|dwnlded|
+	---------------------------------------------------------------------
+	|      default     |   2   |   0   |   0   |   0   ||   2   |   0   |
+	---------------------------------------------------------------------
+:: retrieving :: org.apache.spark#spark-submit-parent-e68434d5-d90b-4b31-9022-1fce2bd94101
+	confs: [default]
+	0 artifacts copied, 2 already retrieved (0kB/5ms)
+23/12/08 00:30:49 WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+Setting default log level to "WARN".
+To adjust logging level use sc.setLogLevel(newLevel). For SparkR, use setLogLevel(newLevel).
+2023-12-08 00:31:07.795 | INFO     | __main__:<module>:30 - df
++------------------+--------------------+-------------------+------------------+--------------+------------------+-----------+
+|           tweetid|              userid|in_reply_to_tweetid|in_reply_to_userid|retweet_userid|   retweet_tweetid|reply_count|
++------------------+--------------------+-------------------+------------------+--------------+------------------+-----------+
+|492388766930444288|0974d5dbee4ca9bd6...|               NULL|              NULL|          NULL|              NULL|          0|
+|719455077589721089|bda40f262856eee77...| 719439882993545216|          40807205|          NULL|              NULL|          0|
+|536179342423105537|bda40f262856eee77...|               NULL|              NULL|          NULL|              NULL|          0|
+|841410788409630720|a53ed619f1dea6015...|               NULL|              NULL|          NULL|              NULL|          0|
+|834365760776630272|a53ed619f1dea6015...|               NULL|              NULL|          NULL|              NULL|          0|
+|577490527299457024|95b3aba6b9140f5dd...|               NULL|              NULL|    2599775719|577485402124111872|          0|
+|596522755379560448|5744c546bdf9e81ea...|               NULL|              NULL|    2518710111|596514222684524545|          0|
+|567357519547207680|2b0d7525bed1df511...|               NULL|              NULL|          NULL|              NULL|          0|
+|665533117369876480|b88fd4fc4b169f0a9...|               NULL|              NULL|      72525490|665522169724739584|          0|
+|493894187079974912|be1e8e099e93fe096...|               NULL|              NULL|          NULL|              NULL|          0|
+|493688319902220288|be1e8e099e93fe096...|               NULL|              NULL|          NULL|              NULL|          0|
+|497543470211678209|be1e8e099e93fe096...|               NULL|              NULL|          NULL|              NULL|          0|
+|701008777001107457|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|725740300065366016|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|704248884072046592|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|710845825622999040|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|648955031081758720|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|704222907304534016|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|860151003752132609|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
+|918116356117139459|f9dded769bb2275fc...|               NULL|              NULL|          NULL|              NULL|          0|
++------------------+--------------------+-------------------+------------------+--------------+------------------+-----------+
+only showing top 20 rows
+
+2023-12-08 00:31:08.237 | INFO     | __main__:<module>:34 - vertices
++------------------+
+|                id|
++------------------+
+|606121573339287552|
+|538649371647418369|
+|       14845958430|
+|694167995644538881|
+|512562426626445312|
++------------------+
+only showing top 5 rows
+
+2023-12-08 00:31:22.856 | INFO     | __main__:<module>:40 - edges_df
+/home/ivanovnp/.cache/pypoetry/virtualenvs/rtu-mirea-lgc4TVed-py3.11/lib/python3.11/site-packages/pyspark/sql/dataframe.py:168: UserWarning: DataFrame.sql_ctx is an internal property, and will be removed in future releases. Use DataFrame.sparkSession instead.
+  warnings.warn(
++------------------+------------------+--------------------+
+|               src|               dst|              userid|
++------------------+------------------+--------------------+
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|279978567025176576|279978220256903168|c90f90a5d12c3c47b...|
+|662532293613875201|662399458911604736|          2882331822|
+|607812929568636928|607811849015427072|          2882331822|
+|634095215863795713|634094841723527168|b4c2ce668b668a698...|
++------------------+------------------+--------------------+
+only showing top 5 rows
+
+/home/ivanovnp/.cache/pypoetry/virtualenvs/rtu-mirea-lgc4TVed-py3.11/lib/python3.11/site-packages/pyspark/sql/dataframe.py:147: UserWarning: DataFrame constructor is internal. Do not directly use it.
+  warnings.warn("DataFrame constructor is internal. Do not directly use it.")
+root
+ |-- a: struct (nullable = false)
+ |    |-- id: long (nullable = true)
+ |-- e: struct (nullable = false)
+ |    |-- src: long (nullable = true)
+ |    |-- dst: string (nullable = true)
+ |    |-- userid: string (nullable = true)
+ |-- b: struct (nullable = false)
+ |    |-- id: long (nullable = true)
+
+2023-12-08 00:31:23.505 | INFO     | __main__:<module>:46 - negative_motif_df
++--------------------+--------------------+--------------------+
+|                   a|                   e|                   b|
++--------------------+--------------------+--------------------+
+|{571347977102446593}|{5713479771024465...|{571347704514637826}|
+|{625030167195447296}|{6250301671954472...|{624937911516065796}|
+|{698974055186227201}|{6989740551862272...|{698971890275188736}|
+|{932808521879511040}|{9328085218795110...|{931694539487690752}|
+|{783308276737961984}|{7833082767379619...|{783307349788352512}|
+|{628246725606531072}|{6282467256065310...|{628169721293090816}|
+|{834859609898651648}|{8348596098986516...|{834855776954888192}|
+|{622549957292240896}|{6225499572922408...|{621946903849254912}|
+|{565883095518576640}|{5658830955185766...|{565882772645228544}|
+|{910454034573791232}|{9104540345737912...|{910451700842078208}|
+|{653357389597442049}|{6533573895974420...|{653328741628702720}|
+|{633746221350322177}|{6337462213503221...|{633552511996141568}|
+|{545560187000872961}|{5455601870008729...|{545559893013725184}|
+|{684055921698435073}|{6840559216984350...|{684055725740552192}|
+|{607692326899613696}|{6076923268996136...|{607556390564073473}|
+|{621057722725871617}|{6210577227258716...|{620929919116251136}|
+|{610596215651217408}|{6105962156512174...|{610379540905500672}|
+|{636201831023144960}|{6362018310231449...|{636200293525528576}|
+|{624667100326588416}|{6246671003265884...|{624601440753840129}|
+|{634851718476505088}|{6348517184765050...|{634831115451269121}|
++--------------------+--------------------+--------------------+
+only showing top 20 rows
+
+2023-12-08 00:32:03.987 | INFO     | __main__:<module>:62 - motif_edges_df
+root
+ |-- src: long (nullable = true)
+ |-- dst: string (nullable = true)
+ |-- userid: string (nullable = true)
+
++------------------+------------------+--------------------+
+|               src|               dst|              userid|
++------------------+------------------+--------------------+
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
+|719455077589721089|719439882993545216|bda40f262856eee77...|
++------------------+------------------+--------------------+
+only showing top 20 rows
+
+2023-12-08 00:32:42.757 | INFO     | __main__:<module>:71 - n_th_level_df
++--------------------+----------+
+|              userid|     count|
++--------------------+----------+
+|7ca1009005708b6f4...|1270078722|
+|          2808833544| 683879559|
+|c6fdb5b31b765db7e...| 525519915|
+|          2589513234| 429306793|
+|          2882331822| 415868400|
+|          2670490950| 340283522|
+|          2912754262| 301888707|
+|a95a911dd6ae864c4...| 267295541|
+|d2857a1f930016f61...| 256153807|
+|ce6f638cb2098f9c7...| 243844817|
+|          2721995401| 187155964|
+|          2687277211| 171459277|
+|           471868887| 168523119|
+|e3089b4a860be0fed...| 146615186|
+|          2351739462| 146424875|
+|ba5b3aa6aafec723e...| 132048123|
+|7c98fcf3412346d24...| 127794590|
+|          3312143142| 116803015|
+|4f34a460a0122c433...| 112888351|
+|0615890e3a47c783d...| 112248431|
++--------------------+----------+
+only showing top 20 rows
+
+2023-12-08 00:39:00.837 | INFO     | __main__:<module>:78 - The user who started the 4-th longest chain is Row(userid='2589513234')
+
+Process finished with exit code 0

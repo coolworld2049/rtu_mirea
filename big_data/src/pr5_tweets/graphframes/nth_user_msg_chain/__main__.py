@@ -27,32 +27,45 @@ df = df.select(*selected_cols).filter(
 logger.info("df")
 df.show()
 
-vertices_df = df.selectExpr("userid as id").distinct().orderBy("reply_count")
+vertices_df = df.selectExpr("tweetid as id").distinct().orderBy("reply_count")
 logger.info("vertices")
 vertices_df.show(5)
 
 edges_df = df.selectExpr(
-    "userid as src", "in_reply_to_userid as dst", "tweetid as relationship"
+    "tweetid as src", "in_reply_to_tweetid as dst", "userid"
 ).filter("dst is not null")
 logger.info("edges_df")
 edges_df.show(5)
 
-g = GraphFrame(vertices_df, edges_df).dropIsolatedVertices()
+G = GraphFrame(vertices_df, edges_df).dropIsolatedVertices()
 
-motif_pattern = f"(a)-[]->(b);(b)-[e]->(a)"
-logger.info(f"motif_pattern: {motif_pattern}")
+negative_motif_df = G.find(f"(a)-[e]->(b);!(b)-[]->(a)")
+logger.info(f"negative_motif_df")
+negative_motif_df.printSchema()
+negative_motif_df.show()
 
-motif_df = g.find(motif_pattern).filter("a.id != b.id")
-logger.info(f"motif_df - count: {motif_df.count()}")
-motif_df.show()
-motif_df.printSchema()
+motif_edges_df = (
+    edges_df.join(
+        negative_motif_df,
+        [
+            negative_motif_df.e["src"] != edges_df.src,
+            negative_motif_df.e["dst"] != edges_df.dst,
+        ],
+        "leftouter",
+    )
+    .where("src is not null and dst is not null")
+    .select("src", "dst", "userid")
+)
+logger.info(f"motif_edges_df")
+motif_edges_df.printSchema()
+motif_edges_df.show()
 
-n_th_level_df = motif_df.groupBy("a.id").count().orderBy(F.desc("count"))
+n_th_level_df = motif_edges_df.groupBy("userid").count().orderBy(F.desc("count"))
 logger.info("n_th_level_df")
 n_th_level_df.show()
 
 n_th_level = 4
-n_th_level_userid = n_th_level_df.select("id").take(n_th_level)[n_th_level - 1]["id"]
+n_th_level_userid = n_th_level_df.select("userid").take(n_th_level)[n_th_level - 1]
 logger.info(
     f"The user who started the {n_th_level}-th longest chain is {n_th_level_userid}"
 )
