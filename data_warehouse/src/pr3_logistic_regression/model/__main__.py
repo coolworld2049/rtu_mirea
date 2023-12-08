@@ -1,120 +1,137 @@
 import numpy as np
 import pandas as pd
-from pandas import DataFrame
+import plotly.express as px
+from numpy import ndarray
+from sklearn import linear_model
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-
-class DataNormalizer:
-    @staticmethod
-    def normalize_data(X_train, X_test):
-        scaler = StandardScaler()
-        X_train_normalized = scaler.fit_transform(X_train)
-        X_test_normalized = scaler.transform(X_test)
-        return X_train_normalized, X_test_normalized
-
-    @staticmethod
-    def remove_features(data, to_drop):
-        return data[:, [col for col in range(data.shape[1]) if col not in to_drop]]
+RANDOM_STATE = 0
+np.random.seed(RANDOM_STATE)
 
 
 class LogisticRegression:
+    def __init__(self, alpha=1e-3, convergence_threshold=1e-4, verbose=0):
+        self.alpha = alpha
+        self.convergence_threshold = convergence_threshold
+        self.theta: ndarray | None = None
+        self.verbose = verbose
+
     @staticmethod
-    def sigmoid(z):
+    def _sigmoid(z):
         return 1 / (1 + np.exp(-z))
 
-    @staticmethod
-    def cost_function(X, y, theta):
+    def _gradient(self, X, y):
+        """
+        ∇J(theta) = (1/m) * X^T * (sigmoid(theta^T X) - y)
+        :param X:
+        :param y:
+        :return:
+        """
         m = len(y)
-        h = LogisticRegression.sigmoid(X.dot(theta))
-        cost = (1 / m) * (-y.dot(np.log(h)) - (1 - y).dot(np.log(1 - h)))
-        return cost
+        # h_theta(X) = sigmoid(theta^T X)
+        hypothesis = self._sigmoid(np.dot(X, self.theta))
+        # ∇J(theta) = (1/m) * X^T   * (h_theta(X) - y)
+        gradient = np.dot(X.transpose(), (hypothesis - y)) / m
+        return gradient
 
-    @staticmethod
-    def gradient_descent(X, y, theta, learning_rate, iterations):
-        m = len(y)
-        cost_history = np.zeros(iterations)
+    def fit(self, X, y):
+        """
+        Алгоритм сошелся когда изменения весов становятся достаточно малыми,
+        и модель приблизительно соответствует оптимальным значениям параметров.
+        :param X:
+        :param y:
+        :return:
+        """
+        X: ndarray = np.c_[np.ones((X.shape[0], 1)), X]
+        self.theta = np.zeros(X.shape[1])
+        last_theta = np.copy(self.theta)
+        iteration = 0
+        while True:
+            gradient = self._gradient(X, y)
+            self.theta -= self.alpha * gradient
+            euclidean_norm = np.linalg.norm(self.theta - last_theta)
+            if self.verbose == 1:
+                print(
+                    f"\titeration: {iteration}\ntheta: {self.theta}\neuclidean_norm: {euclidean_norm}\n"
+                )
+            if euclidean_norm < self.convergence_threshold:
+                print(f"\tIterations {iteration}\n\tEuclidean norm is {euclidean_norm}")
+                break
+            last_theta = np.copy(self.theta)
+            iteration += 1
 
-        for i in range(iterations):
-            gradient = X.T.dot(LogisticRegression.sigmoid(X.dot(theta)) - y) / m
-            theta = theta - learning_rate * gradient
-            cost_history[i] = LogisticRegression.cost_function(X, y, theta)
+    def predict(self, X, threshold=0.5):
+        """
+        Для предсказания подставляем обученные веса в гипотезу и применяем пороговое значение.
 
-        return theta, cost_history
-
-    @staticmethod
-    def predict(X, theta):
-        return LogisticRegression.sigmoid(X.dot(theta))
-
-    @staticmethod
-    def accuracy(y_true, y_pred):
-        y_pred_class = (y_pred >= 0.5).astype(int)
-        return np.mean(y_true == y_pred_class)
+        :param X:
+        :param threshold:
+        :return:
+        """
+        X = np.c_[np.ones((X.shape[0], 1)), X]
+        hypothesises = self._sigmoid(np.dot(X, self.theta))
+        predictions = (hypothesises > threshold).astype(int)
+        return predictions
 
 
-class FeatureSelector:
-    @staticmethod
-    def select_features(data, threshold=0.8):
-        correlation_matrix = data.corr().abs()
-        upper_triangle: DataFrame = correlation_matrix.where(
-            np.triu(np.ones(correlation_matrix.shape), k=1).astype(np.bool_)
-        )
-        to_drop = [
-            column
-            for column in upper_triangle.columns
-            if any(upper_triangle[column] > threshold)
-        ]
-        return to_drop
+def preprocess_data(df, test_size=0.3) -> tuple[ndarray, ndarray, ndarray, ndarray]:
+    X = StandardScaler().fit_transform(df.drop("Outcome", axis=1))
+    y = df["Outcome"]
+    return train_test_split(X, y, test_size=test_size, random_state=RANDOM_STATE)
+
+
+def train_and_evaluate(model, X_train, X_test, y_train, y_test):
+    model.fit(X_train, y_train)
+    y_pred = model.predict(X_test)
+    print(f"\tTest Accuracy: {np.mean(y_pred == y_test) * 100:.2f}%")
+    # print(f"classification_report\n{classification_report(y_test, y_pred)}")
 
 
 if __name__ == "__main__":
-    file_path = "../input/diabetes.csv"
-    data = pd.read_csv(file_path)
+    df = pd.read_csv("../input/diabetes.csv")
+    correlation_matrix = df.corr()
+    fig = px.imshow(
+        correlation_matrix,
+        labels=dict(x="Features", y="Features", color="Correlation"),
+        x=correlation_matrix.columns,
+        y=correlation_matrix.columns,
+        color_continuous_scale="Viridis",
+    )
+    fig.update_layout(title="Correlation Matrix Heatmap", width=800, height=600)
+    # fig.show()
 
-    X = data.iloc[:, :-1].values
-    y = data.iloc[:, -1].values
+    alpha = 1e-3
+    convergence_threshold = 1.5e-4
+    sgd_model_kwargs = {
+        "loss": "log_loss",
+        "random_state": RANDOM_STATE,
+        "alpha": alpha,
+        "l1_ratio": 0,
+        "tol": convergence_threshold,
+        "eta0": alpha,
+    }
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=0.5, random_state=42
+    print("1.LogisticRegression")
+    train_and_evaluate(
+        LogisticRegression(
+            alpha=alpha,
+            convergence_threshold=convergence_threshold,
+        ),
+        *preprocess_data(df),
     )
 
-    data_normalizer = DataNormalizer()
-    X_train_normalized, X_test_normalized = data_normalizer.normalize_data(
-        X_train, X_test
-    )
-
-    # Инициализация и обучение модели логистической регрессии
-    logistic_regression = LogisticRegression()
-    X_train_normalized = np.c_[
-        np.ones((X_train_normalized.shape[0], 1)), X_train_normalized
+    print("\n2.LogisticRegression with selected features")
+    drop_columns = [
+        "BloodPressure",
+        "SkinThickness",
+        "Age",
     ]
-    theta, cost_history = logistic_regression.gradient_descent(
-        X_train_normalized, y_train, np.zeros(X_train_normalized.shape[1]), 0.01, 1000
+    clean_df = df.drop(drop_columns, axis="columns")
+    train_and_evaluate(
+        LogisticRegression(
+            alpha=alpha,
+            convergence_threshold=convergence_threshold,
+        ),
+        *preprocess_data(clean_df),
     )
-
-    # Выбор признаков на основе корреляции
-    feature_selector = FeatureSelector()
-    to_drop = feature_selector.select_features(data, threshold=0.4)
-
-    # Удаление выбранных признаков из обучающей и тестовой выборок
-    X_train_selected = data_normalizer.remove_features(X_train_normalized, to_drop)
-    X_test_selected = data_normalizer.remove_features(X_test_normalized, to_drop)
-
-    # Обучение модели логистической регрессии на выбранных признаках
-    theta_selected, _ = logistic_regression.gradient_descent(
-        X_train_selected, y_train, np.zeros(X_train_selected.shape[1]), 0.01, 1000
-    )
-
-    # Прогнозирование на обучающей и тестовой выборках
-    y_train_pred = logistic_regression.predict(X_train_selected, theta_selected)
-    y_test_pred = logistic_regression.predict(
-        np.c_[np.ones((X_test_selected.shape[0], 1)), X_test_selected], theta_selected
-    )
-
-    # Оценка точности модели
-    accuracy_train = logistic_regression.accuracy(y_train, y_train_pred)
-    accuracy_test = logistic_regression.accuracy(y_test, y_test_pred)
-
-    # Вывод результатов
-    print(f"Точность на обучающей выборке: {accuracy_train}")
-    print(f"Точность на тестовой выборке: {accuracy_test}")
