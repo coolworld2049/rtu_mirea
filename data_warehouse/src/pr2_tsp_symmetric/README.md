@@ -1,3 +1,6 @@
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5676484/
+
 Шаги алгоритма:
 
 1. **Инициализация популяции:**
