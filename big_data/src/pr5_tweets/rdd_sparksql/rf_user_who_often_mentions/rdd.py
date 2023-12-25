@@ -9,6 +9,7 @@ from pr5_tweets.spark.env import spark_work_dir, get_spark_session
 
 spark = get_spark_session()
 
+start_time = time.time()
 rdd = spark.sparkContext.textFile(f"{spark_work_dir}/ira_tweets_csv_hashed.csv").map(
     lambda line: line.split(",")
 )
@@ -36,3 +37,5 @@ result = spark.sparkContext.parallelize(reduced_data, numSlices=5).sortBy(
 )
 print(f"Result: {result.take(1)}")
 spark.stop()
+stop_time = time.time()
+print(f"Elapsed time: {stop_time - start_time:.2f} sec")

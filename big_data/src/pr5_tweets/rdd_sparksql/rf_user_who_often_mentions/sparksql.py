@@ -1,3 +1,5 @@
+import time
+
 from pr5_tweets.rdd_sparksql.rf_user_who_often_mentions.const import (
     politicians,
     russia_country_names,
@@ -6,6 +8,7 @@ from pr5_tweets.spark.env import get_spark_session, spark_work_dir
 
 spark = get_spark_session()
 
+start_time = time.time()
 df = spark.read.csv(
     f"{spark_work_dir}/ira_tweets_csv_hashed.csv",
     header=True,
@@ -27,3 +30,5 @@ query = f"""
 result = spark.sql(query)
 result.show()
 spark.stop()
+stop_time = time.time()
+print(f"Elapsed time: {stop_time - start_time:.2f} sec")
