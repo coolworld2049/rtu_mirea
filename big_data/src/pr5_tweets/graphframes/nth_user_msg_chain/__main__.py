@@ -1,59 +1,66 @@
+from pprint import pprint
+
+import networkx as nx  # noqa
 from graphframes import GraphFrame
-from loguru import logger
+from matplotlib import pyplot as plt  # noqa
 from pyspark.sql import functions as F  # noqa
 
-from pr5_tweets.spark.base import get_spark_session
+from pr5_tweets.spark.env import get_spark_session, spark_work_dir
 
 spark = get_spark_session()
 
 df = spark.read.csv(
-    "file:///home/ivanovnp/tweets/ira_tweets_csv_hashed.csv",
+    f"{spark_work_dir}/ira_tweets_csv_hashed.csv",
     header=True,
     inferSchema=True,
 )
 
-selected_cols = [
-    "tweetid",
-    "userid",
-    "in_reply_to_tweetid",
-    "in_reply_to_userid",
-]
-df = df.select(*selected_cols).filter(
-    "in_reply_to_tweetid is null or in_reply_to_tweetid RLIKE '^\\\d{18}$'"  # noqa
+filtered_df = (
+    df.select(
+        "tweetid",
+        "userid",
+        "in_reply_to_tweetid",
+        "in_reply_to_userid",
+        "reply_count",
+    )
+    .withColumn("reply_count", F.col("reply_count").cast("int"))
+    .filter("in_reply_to_tweetid is null or in_reply_to_tweetid RLIKE '^\\\d{18}$'")
 )
-logger.info("df")
-df.show()
 
-vertices_df = df.selectExpr("tweetid as id", "userid").distinct()
-logger.info("vertices")
-vertices_df.show(5)
-
-edges_df = df.selectExpr("tweetid as src", "in_reply_to_tweetid as dst")
-logger.info("edges_df")
-edges_df.show(5)
+vertices_df = filtered_df.selectExpr(
+    "tweetid as id", "in_reply_to_userid", "reply_count"
+)
+edges_df = filtered_df.selectExpr("in_reply_to_tweetid as src", "tweetid as dst")
 
 G = GraphFrame(vertices_df, edges_df)
 
-cc = G.connectedComponents()
+nth_tweet_chain = 44
 
-cc_df = cc.groupBy("component").count().sort(F.desc("count"))
-logger.info("connected_components_df")
-cc_df.show()
-
-n_th = 1
-n_th_component = cc_df.take(n_th)[0]["component"]
-logger.info(f"{n_th} component: {n_th_component}")
-
-cc_vertices_df = cc.filter(F.col("component") == n_th_component)
-logger.info("connected_component_vertices")
-cc_vertices_df.show()
-
-n_th_level_df = cc_vertices_df.join(
-    edges_df,
-    cc_vertices_df.id == edges_df.src,
-    "leftouter",
+bfs_df = G.bfs(
+    fromExpr="in_reply_to_userid is null",
+    toExpr="in_reply_to_userid is not null and reply_count = 0",
+    maxPathLength=nth_tweet_chain,
 )
-logger.info("n_th_level_df")
-n_th_level_df.show()
+print("bfs_df schema:\n")
+bfs_df.printSchema()
 
-spark.stop()
+bfs_df_dict = bfs_df.limit(20).toPandas().to_dict(orient="records")
+print("bfs_df_dict:\n")
+pprint(bfs_df_dict)
+
+bfs_df_grouped = (
+    bfs_df.groupBy("to.in_reply_to_userid")
+    .agg({"to.in_reply_to_userid": "count"})
+    .withColumnRenamed(
+        "count(to.in_reply_to_userid AS in_reply_to_userid)", "tweet_count"
+    )
+)
+print("bfs_df_grouped:\n")
+bfs_df_grouped.show()
+
+bfs_df_filtered = bfs_df_grouped.filter(F.col("tweet_count") == nth_tweet_chain)
+print(f"bfs_df_filtered:\n")
+bfs_df_filtered.show()
+
+target_userid = bfs_df_filtered.first()["in_reply_to_userid"]
+print(f"target_userid: {target_userid}\n")

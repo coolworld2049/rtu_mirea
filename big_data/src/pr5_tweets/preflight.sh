@@ -1,4 +1,5 @@
-#!/usr/bin/env bash
+#!/bin/bash
+
 
 SCRIPTDIR=$(dirname "$(readlink -f "$0")")
 cd "$SCRIPTDIR" || exit

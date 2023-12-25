@@ -20,7 +20,8 @@ def visualize_shortest_path(graph, best_route):
     best_route_edges.append((best_route[-1], best_route[0]))
 
     edge_labels = {
-        (edge[0], edge[1]): graph.edges[edge]["weight"] for edge in graph.edges
+        (edge[0], edge[1]): graph.bfs_result_edges_df[edge]["weight"]
+        for edge in graph.bfs_result_edges_df
     }
     nx.draw_networkx_edges(
         graph,

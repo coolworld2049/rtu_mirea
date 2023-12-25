@@ -2,7 +2,7 @@
 # автоматически.
 from graphframes import GraphFrame
 
-from pr5_tweets.spark.base import get_spark_session
+from pr5_tweets.spark.env import get_spark_session
 
 spark = get_spark_session()
 

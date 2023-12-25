@@ -8,9 +8,9 @@ random.seed(42)
 
 
 def calculate_distance(graph, route):
-    distance = graph.edges[route[-1], route[0]]["weight"]
+    distance = graph.bfs_result_edges_df[route[-1], route[0]]["weight"]
     for i in range(len(route) - 1):
-        weight = graph.edges[route[i], route[i + 1]]["weight"]
+        weight = graph.bfs_result_edges_df[route[i], route[i + 1]]["weight"]
         distance += weight
     return distance
 
@@ -75,7 +75,7 @@ class GeneticAlgorithm:
         population = []
 
         for _ in range(pop_size):
-            route = list(graph.nodes)
+            route = list(graph.bfs_result_nodes_df)
             random.shuffle(route)
             population.append(route)
 
