@@ -3,6 +3,34 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
+        <entry key="/big_data/src/pr3_etl/data/products.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/big_data/src/pr5_tweets/tweets/ira_tweets_csv_hashed-10.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/big_data/src/pr5_tweets/tweets/ira_users_csv_hashed.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/data_warehouse/src/pr4_bayes_spam_filter/input/spamdb.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\data_warehouse\src\pr3_logistic_regression\input\diabetes.csv">
           <value>
             <Attribute>
